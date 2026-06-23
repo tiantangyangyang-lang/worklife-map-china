@@ -37,7 +37,8 @@ function formatDate(d: Date) {
 
 type ExportType = 'normalized' | 'city' | 'geojson' | 'csv';
 
-export function ExportButton() {
+/** 共享导出逻辑, 桌面 DropdownMenu 和移动端 Sheet 都用这个 */
+export function useExportRecords() {
   const [loading, setLoading] = useState<string | null>(null);
   const allRecords = useMapStore(s => s.allRecords);
   const filteredRecords = useMapStore(s => s.filteredRecords);
@@ -104,6 +105,97 @@ export function ExportButton() {
       setLoading(null);
     }
   };
+
+  return { loading, doExport, allRecords, filteredRecords };
+}
+
+/**
+ * 共享导出菜单内容 (桌面 DropdownMenuContent 和移动端 Sheet 都用)
+ * 调用方负责传入 loading / doExport / counts
+ */
+export function ExportMenuItems({
+  loading,
+  doExport,
+  allCount,
+  filteredCount,
+  onItemClick,
+}: {
+  loading: string | null;
+  doExport: (type: ExportType, useFiltered: boolean) => void;
+  allCount: number;
+  filteredCount: number;
+  /** 点击某项后的回调 (移动端用于关闭 Sheet) */
+  onItemClick?: () => void;
+}) {
+  const handle = (type: ExportType, useFiltered: boolean) => {
+    doExport(type, useFiltered);
+    onItemClick?.();
+  };
+
+  return (
+    <>
+      <div className="px-1 py-2 text-xs font-semibold text-slate-500 border-b border-slate-100 mb-1">
+        数据导出 (全量 / 当前筛选)
+      </div>
+
+      {/* 标准化记录 */}
+      <div className="px-2 py-1 text-[10px] font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1">
+        <FileJson className="w-3 h-3" />标准化记录 JSON
+      </div>
+      <button
+        onClick={() => handle('normalized', false)}
+        className="w-full px-2 py-1.5 text-left text-sm hover:bg-slate-50 rounded flex items-center justify-between"
+      >
+        <span>全量数据</span>
+        <span className="text-[10px] text-slate-400">{allCount} 条</span>
+      </button>
+      <button
+        onClick={() => handle('normalized', true)}
+        className="w-full px-2 py-1.5 text-left text-sm hover:bg-slate-50 rounded flex items-center justify-between"
+      >
+        <span>当前筛选</span>
+        <span className="text-[10px] text-slate-400">{filteredCount} 条</span>
+      </button>
+
+      <div className="h-2" />
+
+      {/* 城市统计 */}
+      <div className="px-2 py-1 text-[10px] font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1">
+        <Database className="w-3 h-3" />城市聚合统计 JSON
+      </div>
+      <button onClick={() => handle('city', false)} className="w-full px-2 py-1.5 text-left text-sm hover:bg-slate-50 rounded">全量数据</button>
+      <button onClick={() => handle('city', true)} className="w-full px-2 py-1.5 text-left text-sm hover:bg-slate-50 rounded">当前筛选</button>
+
+      <div className="h-2" />
+
+      {/* GeoJSON */}
+      <div className="px-2 py-1 text-[10px] font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1">
+        <Globe className="w-3 h-3" />地图 GeoJSON
+      </div>
+      <button onClick={() => handle('geojson', false)} className="w-full px-2 py-1.5 text-left text-sm hover:bg-slate-50 rounded">全量数据</button>
+      <button onClick={() => handle('geojson', true)} className="w-full px-2 py-1.5 text-left text-sm hover:bg-slate-50 rounded">当前筛选</button>
+
+      <div className="h-2" />
+
+      {/* CSV */}
+      <div className="px-2 py-1 text-[10px] font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1">
+        <FileText className="w-3 h-3" />Excel 友好 CSV
+      </div>
+      <button onClick={() => handle('csv', false)} className="w-full px-2 py-1.5 text-left text-sm hover:bg-slate-50 rounded">全量数据</button>
+      <button onClick={() => handle('csv', true)} className="w-full px-2 py-1.5 text-left text-sm hover:bg-slate-50 rounded">当前筛选</button>
+
+      {loading && (
+        <div className="mt-2 pt-2 border-t border-slate-100 text-[11px] text-slate-500 flex items-center gap-1.5">
+          <Loader2 className="w-3 h-3 animate-spin" />
+          正在导出...
+        </div>
+      )}
+    </>
+  );
+}
+
+export function ExportButton() {
+  const { loading, doExport, allRecords, filteredRecords } = useExportRecords();
 
   return (
     <DropdownMenu>

@@ -25,15 +25,31 @@ import {
 
 type Stage = 'idle' | 'parsing' | 'review' | 'done';
 
-export function UploadExcel() {
+interface UploadExcelProps {
+  /** 可选: 受控模式 (移动端"更多"菜单需要外部触发) */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  /** 可选: 隐藏默认触发按钮 (受控模式下使用) */
+  hideTrigger?: boolean;
+}
+
+export function UploadExcel({ open: controlledOpen, onOpenChange, hideTrigger }: UploadExcelProps = {}) {
   const inputRef = useRef<HTMLInputElement>(null);
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
   const [stage, setStage] = useState<Stage>('idle');
   const [pendingRecords, setPendingRecords] = useState<CompanyRecord[]>([]);
   const [pendingReport, setPendingReport] = useState<ParseReport | null>(null);
   const [pendingFileName, setPendingFileName] = useState('');
   const setRecords = useMapStore(s => s.setRecords);
   const resetFilter = useMapStore(s => s.resetFilter);
+
+  // 受控 / 非受控 open 状态
+  const isControlled = controlledOpen !== undefined;
+  const open = isControlled ? controlledOpen! : internalOpen;
+  const setOpen = (v: boolean) => {
+    if (isControlled && onOpenChange) onOpenChange(v);
+    else setInternalOpen(v);
+  };
 
   const reset = () => {
     setStage('idle');
@@ -68,7 +84,7 @@ export function UploadExcel() {
     setRecords(pendingRecords, pendingFileName);
     toast.success(`已导入 ${pendingRecords.length} 条作息记录 (来自 ${pendingFileName})`);
     setOpen(false);
-    reset();
+    setTimeout(reset, 0);
   };
 
   const cancelImport = () => {
@@ -77,11 +93,13 @@ export function UploadExcel() {
 
   return (
     <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) reset(); }}>
-      <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className="bg-white/80 backdrop-blur-sm">
-          <UploadCloud className="w-3.5 h-3.5 mr-1.5" />上传数据
-        </Button>
-      </DialogTrigger>
+      {!hideTrigger && (
+        <DialogTrigger asChild>
+          <Button variant="outline" size="sm" className="bg-white/80 backdrop-blur-sm">
+            <UploadCloud className="w-3.5 h-3.5 mr-1.5" />上传数据
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">

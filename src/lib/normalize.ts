@@ -3,7 +3,7 @@
 // ============================================================
 import { findCityCenter } from './city-centers';
 import type { SectionTitle, CompanyRecord } from './types';
-import { classifyWorkSystem, classifyWeekendType, classifyRiskLevel, classifyConfidence, excelDateToString } from './classify';
+import { classifyWorkSystem, classifyWeekendType, classifyRiskLevel, classifyConfidence, excelDateToString, buildClassificationBasis } from './classify';
 
 /** 非城市关键词 (在拆分时会被过滤) */
 const NON_CITY_KEYWORDS = new Set(['remote', 'Remote', 'REMOTE', '远程', '不限', '全国', '多地', 'Linkedin', 'National']);
@@ -77,6 +77,16 @@ export function buildCompanyRecord(
   const confidence = classifyConfidence(section, ruleText, evidenceList);
   const eventDate = excelDateToString(timeRaw);
 
+  // issue #8: 生成分类依据 (供公司详情页展示)
+  const classificationBasis = buildClassificationBasis(
+    fullText,
+    section,
+    workSystem,
+    weekendType,
+    riskLevel,
+    `${ruleText} ${evidenceText}`,
+  );
+
   // 为每个城市生成一条记录 (multi-city 展开)
   if (cities.length === 0) {
     return [{
@@ -94,6 +104,7 @@ export function buildCompanyRecord(
       work_system: workSystem,
       weekend_type: weekendType,
       risk_level: riskLevel,
+      classification_basis: classificationBasis,
       time_raw: timeRaw,
       event_date: eventDate,
       rule_text: ruleText,
@@ -125,6 +136,7 @@ export function buildCompanyRecord(
       work_system: workSystem,
       weekend_type: weekendType,
       risk_level: riskLevel,
+      classification_basis: classificationBasis,
       time_raw: timeRaw,
       event_date: eventDate,
       rule_text: ruleText,

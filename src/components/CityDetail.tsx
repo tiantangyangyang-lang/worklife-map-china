@@ -10,13 +10,14 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 import { WORK_SYSTEM_LABELS, RISK_COLORS, CONFIDENCE_LABELS } from '@/lib/types';
-import type { CompanyRecord, CitySummary } from '@/lib/types';
-import { ArrowLeft, MapPin, Building2, FileText, ExternalLink, Quote, Calendar, Hash, ShieldCheck, AlertTriangle, Activity } from 'lucide-react';
+import type { CompanyRecord, CitySummary, ClassificationBasis } from '@/lib/types';
+import { ArrowLeft, MapPin, Building2, FileText, ExternalLink, Quote, Calendar, Hash, ShieldCheck, AlertTriangle, Activity, Sparkles, RotateCcw } from 'lucide-react';
 
 /** 城市统计 + 公司列表 (默认视图) */
 function CityListView({ city, records, onBack }: { city: CitySummary; records: CompanyRecord[]; onBack: () => void }) {
-  // 按风险等级排序: very_high > high > medium > unknown > low
+  // 按强度等级排序: very_high > high > medium > unknown > low
   const riskOrder = { very_high: 0, high: 1, medium: 2, unknown: 3, low: 4 };
+  const resetFilter = useMapStore(s => s.resetFilter);
   const sortedRecords = useMemo(() => {
     return [...records].sort((a, b) => {
       const r = riskOrder[a.risk_level] - riskOrder[b.risk_level];
@@ -66,7 +67,21 @@ function CityListView({ city, records, onBack }: { city: CitySummary; records: C
       <ScrollArea className="flex-1">
         <div className="p-3 space-y-1.5">
           {sortedRecords.length === 0 && (
-            <div className="text-center text-slate-400 py-8 text-sm">该城市暂无符合条件的记录</div>
+            <div className="flex flex-col items-center text-center py-8 px-3">
+              <div className="w-12 h-12 rounded-full bg-amber-50 border border-amber-100 flex items-center justify-center mb-2.5">
+                <Sparkles className="w-6 h-6 text-amber-400" />
+              </div>
+              <div className="text-sm font-medium text-slate-600 mb-1">该城市暂无符合条件的记录</div>
+              <div className="text-xs text-slate-400 mb-3">当前筛选条件已过滤掉全部记录</div>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={resetFilter}
+                className="text-emerald-700 border-emerald-300 hover:bg-emerald-50"
+              >
+                <RotateCcw className="w-3 h-3 mr-1" />一键重置筛选
+              </Button>
+            </div>
           )}
           {sortedRecords.map(rec => (
             <motion.div
@@ -162,6 +177,11 @@ function CompanyDetailView({ record, onBack }: { record: CompanyRecord; onBack: 
 
       <ScrollArea className="flex-1">
         <div className="p-4 space-y-4">
+          {/* 分类依据 (issue #8) */}
+          {record.classification_basis && (
+            <ClassificationBasisView basis={record.classification_basis} />
+          )}
+
           {/* 规则文本 */}
           {record.rule_text && (
             <div>
@@ -237,6 +257,89 @@ function CompanyDetailView({ record, onBack }: { record: CompanyRecord; onBack: 
           </div>
         </div>
       </ScrollArea>
+    </div>
+  );
+}
+
+/** 分类依据模块 (issue #8) */
+function ClassificationBasisView({ basis }: { basis: ClassificationBasis }) {
+  const sourceLabel: Record<string, string> = {
+    keyword: '关键词命中',
+    section_fallback: '区域兜底',
+    section_default: '区域默认',
+    work_system_inferred: '由工作制度推断',
+    severe_keyword: '违规关键词',
+    work_system_mapping: '制度默认映射',
+    unknown: '未知来源',
+  };
+
+  const Row = ({
+    title,
+    value,
+    reasons,
+    source,
+    color,
+  }: {
+    title: string;
+    value: string;
+    reasons: string[];
+    source: string;
+    color?: string;
+  }) => (
+    <div className="bg-white rounded-md border border-slate-200 p-2.5">
+      <div className="flex items-center justify-between mb-1.5">
+        <div className="flex items-center gap-1.5">
+          <span className="text-xs font-semibold text-slate-700">{title}</span>
+          <Badge variant="outline" className="text-[10px] h-4 px-1.5 font-normal text-slate-500">
+            {sourceLabel[source] || source}
+          </Badge>
+        </div>
+        <span
+          className="text-xs px-2 py-0.5 rounded-full text-white font-semibold"
+          style={color ? { backgroundColor: color } : undefined}
+        >
+          {value}
+        </span>
+      </div>
+      <ul className="space-y-1">
+        {reasons.map((r, i) => (
+          <li key={i} className="text-[11px] text-slate-600 leading-relaxed flex items-start gap-1">
+            <span className="text-emerald-500 mt-0.5 shrink-0">•</span>
+            <span>{r}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+
+  return (
+    <div>
+      <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-700 mb-1.5">
+        <Sparkles className="w-3.5 h-3.5 text-emerald-500" />
+        分类依据
+        <span className="text-[10px] text-slate-400 font-normal">(系统自动判定, 仅供参考)</span>
+      </div>
+      <div className="space-y-1.5">
+        <Row
+          title="工作制度"
+          value={WORK_SYSTEM_LABELS[basis.workSystem.label] || basis.workSystem.label}
+          reasons={basis.workSystem.reasons}
+          source={basis.workSystem.source}
+        />
+        <Row
+          title="周末类型"
+          value={basis.weekendType.label}
+          reasons={basis.weekendType.reasons}
+          source={basis.weekendType.source}
+        />
+        <Row
+          title="强度等级"
+          value={RISK_COLORS[basis.riskLevel.label].label}
+          reasons={basis.riskLevel.reasons}
+          source={basis.riskLevel.source}
+          color={RISK_COLORS[basis.riskLevel.label].fill}
+        />
+      </div>
     </div>
   );
 }

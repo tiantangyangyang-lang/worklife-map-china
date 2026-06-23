@@ -25,7 +25,7 @@ export type WeekendType =
   | '排班/轮休'
   | '未知';
 
-/** 风险等级 */
+/** 强度等级 (内部字段名仍为 risk_level, 但 UI 文案统一为"工作强度等级") */
 export type RiskLevel = 'low' | 'medium' | 'high' | 'very_high' | 'unknown';
 
 /** 地理精度 */
@@ -36,6 +36,25 @@ export type Confidence = 'A' | 'B' | 'C' | 'D' | 'E';
 
 /** 数据来源区域 (Excel 中的三大区域) */
 export type SectionTitle = '955' | '965' | '996';
+
+/** 分类依据 (issue #8: 公司详情页展示) */
+export interface ClassificationBasis {
+  workSystem: {
+    label: WorkSystem;
+    reasons: string[];
+    source: 'keyword' | 'section_fallback' | 'unknown';
+  };
+  weekendType: {
+    label: WeekendType;
+    reasons: string[];
+    source: 'keyword' | 'work_system_inferred' | 'section_default' | 'unknown';
+  };
+  riskLevel: {
+    label: RiskLevel;
+    reasons: string[];
+    source: 'severe_keyword' | 'work_system_mapping' | 'unknown';
+  };
+}
 
 /** 标准化后的公司记录 */
 export interface CompanyRecord {
@@ -53,6 +72,7 @@ export interface CompanyRecord {
   work_system: WorkSystem;
   weekend_type: WeekendType;
   risk_level: RiskLevel;
+  classification_basis?: ClassificationBasis; // issue #8: 分类依据 (可选, 老数据可能没有)
   time_raw: string;
   event_date: string;
   rule_text: string;

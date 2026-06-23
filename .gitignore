@@ -53,6 +53,8 @@ server.log
 # Skills directory
 /skills/
 
-# Database (this project uses static Excel data, but build.sh expects db/custom.db to exist)
-!/db/
-!/db/custom.db
+# Internal deployment artifacts (issue #5: 已从仓库中删除, 不再追踪)
+/.env
+/db/
+/tool-results/
+/.zscripts/

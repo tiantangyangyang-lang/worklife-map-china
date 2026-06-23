@@ -2,7 +2,7 @@
 // Zustand 全局状态管理
 // ============================================================
 import { create } from 'zustand';
-import type { CompanyRecord, CitySummary, GlobalStats as _GS } from '@/lib/types';
+import type { CompanyRecord, CitySummary } from '@/lib/types';
 import { buildCitySummary, buildGlobalStats } from '@/lib/aggregate';
 import type { GlobalStats } from '@/lib/aggregate';
 import type { FilterState, WorkSystem, WeekendType, RiskLevel, Confidence } from '@/lib/types';

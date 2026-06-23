@@ -1,9 +1,9 @@
 // ============================================================
-// 数据聚合: 按城市统计 / 生成 GeoJSON / 风险评分
+// 数据聚合: 按城市统计 / 生成 GeoJSON / 强度评分
 // ============================================================
 import type { CompanyRecord, CitySummary, GeoJSONCollection, RiskLevel } from './types';
 
-/** 风险评分权重 (用于城市聚合) */
+/** 强度评分权重 (用于城市聚合) */
 const RISK_WEIGHTS: Record<RiskLevel, number> = {
   low: 0,
   medium: 30,
@@ -13,7 +13,7 @@ const RISK_WEIGHTS: Record<RiskLevel, number> = {
 };
 
 /**
- * 按城市聚合公司记录, 计算风险评分和统计
+ * 按城市聚合公司记录, 计算强度评分和统计
  */
 export function buildCitySummary(records: CompanyRecord[]): CitySummary[] {
   const cityMap = new Map<string, CompanyRecord[]>();
@@ -39,12 +39,12 @@ export function buildCitySummary(records: CompanyRecord[]): CitySummary[] {
     const count_very_high = recs.filter(r => r.risk_level === 'very_high').length;
     const count_unknown = recs.filter(r => r.risk_level === 'unknown').length;
 
-    // 风险评分 = 加权平均
+    // 强度评分 = 加权平均
     const risk_score = Math.round(
       recs.reduce((sum, r) => sum + RISK_WEIGHTS[r.risk_level], 0) / total,
     );
 
-    // 主导风险等级 (取最多的等级)
+    // 主导强度等级 (取最多的等级)
     const levelCount: Record<RiskLevel, number> = {
       low: count_low,
       medium: count_medium,

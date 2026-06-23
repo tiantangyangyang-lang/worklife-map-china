@@ -9,6 +9,8 @@ import { project, MAP_WIDTH, MAP_HEIGHT, type ChinaMapData, type ProvincePath } 
 import { RISK_COLORS } from '@/lib/types';
 import type { CitySummary, RiskLevel } from '@/lib/types';
 import { motion, AnimatePresence } from 'framer-motion';
+import { SearchX, RotateCcw } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 /** 根据记录数计算点位半径 */
 function getRadius(total: number): number {
@@ -34,6 +36,13 @@ export function MapView() {
   const hoveredCity = useMapStore(s => s.hoveredCity);
   const selectCity = useMapStore(s => s.selectCity);
   const hoverCity = useMapStore(s => s.hoverCity);
+  const allRecords = useMapStore(s => s.allRecords);
+  const filteredRecords = useMapStore(s => s.filteredRecords);
+  const resetFilter = useMapStore(s => s.resetFilter);
+
+  // issue #9: 筛选无结果时显示空状态
+  // 触发条件: 全量数据非空 + 筛选后记录为 0
+  const isFilteredEmpty = allRecords.length > 0 && filteredRecords.length === 0;
 
   const [mapData, setMapData] = useState<ChinaMapData | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -351,6 +360,38 @@ export function MapView() {
           </div>
         </div>
       )}
+
+      {/* issue #9: 筛选无结果空状态 */}
+      <AnimatePresence>
+        {isFilteredEmpty && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="absolute inset-0 flex items-center justify-center bg-white/80 backdrop-blur-sm z-30 p-4"
+          >
+            <div className="flex flex-col items-center text-center max-w-sm">
+              <div className="w-16 h-16 rounded-full bg-amber-50 border border-amber-100 flex items-center justify-center mb-3">
+                <SearchX className="w-8 h-8 text-amber-500" />
+              </div>
+              <div className="text-base font-semibold text-slate-700 mb-1">没有符合条件的作息记录</div>
+              <div className="text-xs text-slate-500 mb-4 leading-relaxed">
+                当前筛选条件下没有可显示的城市点位。<br />
+                可以尝试放宽筛选条件, 或一键重置全部筛选。
+              </div>
+              <Button
+                onClick={resetFilter}
+                size="sm"
+                className="bg-emerald-600 hover:bg-emerald-700 text-white"
+              >
+                <RotateCcw className="w-3.5 h-3.5 mr-1.5" />
+                一键重置筛选
+              </Button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

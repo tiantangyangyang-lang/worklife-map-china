@@ -2,9 +2,10 @@
 
 // ============================================================
 // 移动端布局: 顶部紧凑 + 横向滚动统计 + 地图主区 + 底部抽屉
+// issue #4: 顶部增加"更多"菜单 (上传数据 / 导出数据 / 关于项目)
 // ============================================================
 import { useState } from 'react';
-import { Filter, SlidersHorizontal, MapPin, X, ChevronDown } from 'lucide-react';
+import { Filter, SlidersHorizontal, MapPin, X, ChevronDown, MoreVertical, UploadCloud, Download, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -13,22 +14,48 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
 import { FilterPanel } from './FilterPanel';
 import { CityDetail } from './CityDetail';
 import { StatsPanel } from './StatsPanel';
 import { MapView } from './MapView';
 import { Legend } from './Legend';
 import { SearchBar } from './SearchBar';
+import { UploadExcel } from './UploadExcel';
+import { ExportMenuItems, useExportRecords } from './ExportButton';
 import { useMapStore } from '@/store/useMapStore';
 
 export function MobileLayout() {
   const [filterOpen, setFilterOpen] = useState(false);
   const [disclaimerOpen, setDisclaimerOpen] = useState(false);
+  const [moreMenuOpen, setMoreMenuOpen] = useState(false);
+  // issue #4: 三个独立弹窗 / 抽屉的开关
+  const [uploadOpen, setUploadOpen] = useState(false);
+  const [exportSheetOpen, setExportSheetOpen] = useState(false);
+  const [aboutOpen, setAboutOpen] = useState(false);
+
   const selectedCity = useMapStore(s => s.selectedCity);
   const selectedCompany = useMapStore(s => s.selectedCompany);
   const selectCity = useMapStore(s => s.selectCity);
   const selectCompany = useMapStore(s => s.selectCompany);
   const filter = useMapStore(s => s.filter);
+
+  // 导出逻辑 (共享 hook)
+  const { loading: exportLoading, doExport, allRecords, filteredRecords } = useExportRecords();
 
   const activeFilterCount =
     filter.cities.length + filter.workSystems.length + filter.weekendTypes.length +
@@ -36,7 +63,7 @@ export function MobileLayout() {
 
   return (
     <div className="h-screen flex flex-col bg-slate-100 overflow-hidden">
-      {/* 顶部搜索栏 + 筛选按钮 */}
+      {/* 顶部搜索栏 + 筛选按钮 + 更多菜单 (issue #4) */}
       <header className="bg-white border-b border-slate-200 px-3 py-2 flex items-center gap-2 shrink-0 z-30">
         <div className="flex items-center gap-1.5 shrink-0">
           <div className="w-7 h-7 rounded-md bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white">
@@ -77,6 +104,40 @@ export function MobileLayout() {
             </div>
           </SheetContent>
         </Sheet>
+
+        {/* issue #4: 更多菜单 */}
+        <DropdownMenu open={moreMenuOpen} onOpenChange={setMoreMenuOpen}>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="sm" className="shrink-0 h-8 px-2" aria-label="更多">
+              <MoreVertical className="w-3.5 h-3.5" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuLabel className="text-xs text-slate-500">更多操作</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={() => { setMoreMenuOpen(false); setUploadOpen(true); }}
+              className="cursor-pointer"
+            >
+              <UploadCloud className="w-3.5 h-3.5 mr-2 text-emerald-600" />
+              <span className="text-sm">上传数据</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => { setMoreMenuOpen(false); setExportSheetOpen(true); }}
+              className="cursor-pointer"
+            >
+              <Download className="w-3.5 h-3.5 mr-2 text-emerald-600" />
+              <span className="text-sm">导出数据</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => { setMoreMenuOpen(false); setAboutOpen(true); }}
+              className="cursor-pointer"
+            >
+              <Info className="w-3.5 h-3.5 mr-2 text-emerald-600" />
+              <span className="text-sm">关于项目</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </header>
 
       {/* 横向滚动统计卡片 */}
@@ -116,6 +177,70 @@ export function MobileLayout() {
           </div>
         </SheetContent>
       </Sheet>
+
+      {/* issue #4: 上传数据弹窗 (复用 UploadExcel 受控模式) */}
+      <UploadExcel open={uploadOpen} onOpenChange={setUploadOpen} hideTrigger />
+
+      {/* issue #4: 导出数据 Sheet (复用 ExportMenuItems) */}
+      <Sheet open={exportSheetOpen} onOpenChange={setExportSheetOpen}>
+        <SheetContent side="bottom" className="p-0 flex flex-col" aria-describedby={undefined}>
+          <SheetHeader className="px-4 py-3 border-b border-slate-100 flex-row items-center justify-between space-y-0">
+            <SheetTitle className="flex items-center gap-2 text-base">
+              <Download className="w-4 h-4 text-emerald-600" />
+              导出数据
+            </SheetTitle>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 w-7 p-0"
+              onClick={() => setExportSheetOpen(false)}
+            >
+              <X className="w-4 h-4" />
+            </Button>
+          </SheetHeader>
+          <div className="flex-1 overflow-y-auto px-4 py-3 pb-6">
+            <ExportMenuItems
+              loading={exportLoading}
+              doExport={doExport}
+              allCount={allRecords.length}
+              filteredCount={filteredRecords.length}
+              onItemClick={() => setExportSheetOpen(false)}
+            />
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      {/* issue #4: 关于项目 Dialog */}
+      <Dialog open={aboutOpen} onOpenChange={setAboutOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>关于本项目</DialogTitle>
+            <DialogDescription>
+              开源的中国公司作息数据可视化工具
+            </DialogDescription>
+          </DialogHeader>
+          <div className="text-sm text-slate-600 space-y-3 leading-relaxed">
+            <p>
+              本项目接收用户上传的 955/965/996 公司作息数据 (Excel / CSV),
+              自动清洗、分类、工作强度评级后, 在中国地图上以城市为单位展示
+              公司作息情况。
+            </p>
+            <div className="bg-slate-50 rounded-md p-3 text-xs space-y-1">
+              <div className="font-semibold text-slate-700">V1 已实现</div>
+              <div>· Excel 导入与多区域识别</div>
+              <div>· 城市级聚合与强度评分</div>
+              <div>· 工作制度/周末类型自动分类</div>
+              <div>· 搜索、筛选、多格式导出</div>
+            </div>
+            <div className="bg-amber-50 border border-amber-200 rounded-md p-3 text-xs text-amber-800">
+              <strong>免责声明:</strong> 本项目数据来自用户上传或公开整理,
+              仅供参考, 不代表公司官方结论, 也不构成对任何公司的法律判定。
+              同一公司不同城市、部门、岗位作息可能存在显著差异,
+              请以劳动合同和实际工作情况为准。
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* 可折叠免责声明 */}
       <footer className="bg-slate-800 text-slate-300 shrink-0">
