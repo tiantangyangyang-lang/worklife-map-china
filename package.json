@@ -10,7 +10,8 @@
     "start": "NODE_ENV=production node .next/standalone/server.js",
     "lint": "eslint .",
     "build:data": "tsx scripts/build-data.ts",
-    "build:map": "tsx scripts/build-china-map.ts"
+    "build:map": "tsx scripts/build-china-map.ts",
+    "db:push": "echo '[db:push] no-op: this project uses static Excel data, no Prisma database.'"
   },
   "dependencies": {
     "@radix-ui/react-checkbox": "^1.3.2",

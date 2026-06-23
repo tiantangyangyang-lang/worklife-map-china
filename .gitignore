@@ -52,3 +52,7 @@ prompt
 server.log
 # Skills directory
 /skills/
+
+# Database (this project uses static Excel data, but build.sh expects db/custom.db to exist)
+!/db/
+!/db/custom.db
