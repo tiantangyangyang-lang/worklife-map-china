@@ -1,0 +1,765 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.4737,
+          31.2304
+        ]
+      },
+      "properties": {
+        "city": "上海",
+        "province": "上海",
+        "total": 94,
+        "risk_score": 26,
+        "risk_dominant": "low",
+        "count_955": 64,
+        "count_965": 2,
+        "count_996": 28
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          116.4074,
+          39.9042
+        ]
+      },
+      "properties": {
+        "city": "北京",
+        "province": "北京",
+        "total": 91,
+        "risk_score": 54,
+        "risk_dominant": "very_high",
+        "count_955": 32,
+        "count_965": 4,
+        "count_996": 55
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          114.0579,
+          22.5431
+        ]
+      },
+      "properties": {
+        "city": "深圳",
+        "province": "广东",
+        "total": 43,
+        "risk_score": 66,
+        "risk_dominant": "very_high",
+        "count_955": 10,
+        "count_965": 1,
+        "count_996": 32
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          120.1551,
+          30.2741
+        ]
+      },
+      "properties": {
+        "city": "杭州",
+        "province": "浙江",
+        "total": 25,
+        "risk_score": 64,
+        "risk_dominant": "very_high",
+        "count_955": 7,
+        "count_965": 1,
+        "count_996": 17
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          104.0665,
+          30.5728
+        ]
+      },
+      "properties": {
+        "city": "成都",
+        "province": "四川",
+        "total": 13,
+        "risk_score": 66,
+        "risk_dominant": "very_high",
+        "count_955": 2,
+        "count_965": 1,
+        "count_996": 10
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          120.5853,
+          31.2989
+        ]
+      },
+      "properties": {
+        "city": "苏州",
+        "province": "江苏",
+        "total": 11,
+        "risk_score": 45,
+        "risk_dominant": "low",
+        "count_955": 6,
+        "count_965": 0,
+        "count_996": 5
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          118.7969,
+          32.0603
+        ]
+      },
+      "properties": {
+        "city": "南京",
+        "province": "江苏",
+        "total": 11,
+        "risk_score": 60,
+        "risk_dominant": "very_high",
+        "count_955": 4,
+        "count_965": 0,
+        "count_996": 7
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          113.2644,
+          23.1291
+        ]
+      },
+      "properties": {
+        "city": "广州",
+        "province": "广东",
+        "total": 11,
+        "risk_score": 75,
+        "risk_dominant": "very_high",
+        "count_955": 1,
+        "count_965": 0,
+        "count_996": 10
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          114.3055,
+          30.5928
+        ]
+      },
+      "properties": {
+        "city": "武汉",
+        "province": "湖北",
+        "total": 8,
+        "risk_score": 66,
+        "risk_dominant": "very_high",
+        "count_955": 2,
+        "count_965": 0,
+        "count_996": 6
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          108.9398,
+          34.3416
+        ]
+      },
+      "properties": {
+        "city": "西安",
+        "province": "陕西",
+        "total": 7,
+        "risk_score": 47,
+        "risk_dominant": "low",
+        "count_955": 3,
+        "count_965": 1,
+        "count_996": 3
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          118.3265,
+          35.0653
+        ]
+      },
+      "properties": {
+        "city": "临沂",
+        "province": "山东",
+        "total": 7,
+        "risk_score": 100,
+        "risk_dominant": "very_high",
+        "count_955": 0,
+        "count_965": 0,
+        "count_996": 7
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.6147,
+          38.914
+        ]
+      },
+      "properties": {
+        "city": "大连",
+        "province": "辽宁",
+        "total": 6,
+        "risk_score": 83,
+        "risk_dominant": "very_high",
+        "count_955": 1,
+        "count_965": 0,
+        "count_996": 5
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          117.1901,
+          39.1252
+        ]
+      },
+      "properties": {
+        "city": "天津",
+        "province": "天津",
+        "total": 6,
+        "risk_score": 77,
+        "risk_dominant": "very_high",
+        "count_955": 0,
+        "count_965": 0,
+        "count_996": 6
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          118.0894,
+          24.4798
+        ]
+      },
+      "properties": {
+        "city": "厦门",
+        "province": "福建",
+        "total": 4,
+        "risk_score": 50,
+        "risk_dominant": "low",
+        "count_955": 2,
+        "count_965": 0,
+        "count_996": 2
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          117.2272,
+          31.8206
+        ]
+      },
+      "properties": {
+        "city": "合肥",
+        "province": "安徽",
+        "total": 3,
+        "risk_score": 10,
+        "risk_dominant": "low",
+        "count_955": 2,
+        "count_965": 0,
+        "count_996": 1
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          112.9388,
+          28.2282
+        ]
+      },
+      "properties": {
+        "city": "长沙",
+        "province": "湖南",
+        "total": 3,
+        "risk_score": 77,
+        "risk_dominant": "very_high",
+        "count_955": 0,
+        "count_965": 1,
+        "count_996": 2
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          114.1694,
+          22.3193
+        ]
+      },
+      "properties": {
+        "city": "香港",
+        "province": "香港",
+        "total": 2,
+        "risk_score": 0,
+        "risk_dominant": "low",
+        "count_955": 2,
+        "count_965": 0,
+        "count_996": 0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          119.2965,
+          26.0745
+        ]
+      },
+      "properties": {
+        "city": "福州",
+        "province": "福建",
+        "total": 2,
+        "risk_score": 83,
+        "risk_dominant": "high",
+        "count_955": 0,
+        "count_965": 0,
+        "count_996": 2
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          118.0548,
+          36.8131
+        ]
+      },
+      "properties": {
+        "city": "淄博",
+        "province": "山东",
+        "total": 2,
+        "risk_score": 100,
+        "risk_dominant": "very_high",
+        "count_955": 0,
+        "count_965": 0,
+        "count_996": 2
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          117.1205,
+          36.651
+        ]
+      },
+      "properties": {
+        "city": "济南",
+        "province": "山东",
+        "total": 2,
+        "risk_score": 65,
+        "risk_dominant": "medium",
+        "count_955": 0,
+        "count_965": 0,
+        "count_996": 2
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          106.5516,
+          29.563
+        ]
+      },
+      "properties": {
+        "city": "重庆",
+        "province": "重庆",
+        "total": 2,
+        "risk_score": 83,
+        "risk_dominant": "high",
+        "count_955": 0,
+        "count_965": 0,
+        "count_996": 2
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.8343,
+          36.0611
+        ]
+      },
+      "properties": {
+        "city": "兰州",
+        "province": "甘肃",
+        "total": 2,
+        "risk_score": 100,
+        "risk_dominant": "very_high",
+        "count_955": 0,
+        "count_965": 0,
+        "count_996": 2
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          120.3119,
+          31.4912
+        ]
+      },
+      "properties": {
+        "city": "无锡",
+        "province": "江苏",
+        "total": 1,
+        "risk_score": 0,
+        "risk_dominant": "low",
+        "count_955": 1,
+        "count_965": 0,
+        "count_996": 0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          113.7518,
+          23.0207
+        ]
+      },
+      "properties": {
+        "city": "东莞",
+        "province": "广东",
+        "total": 1,
+        "risk_score": 100,
+        "risk_dominant": "very_high",
+        "count_955": 0,
+        "count_965": 0,
+        "count_996": 1
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          113.1216,
+          23.0218
+        ]
+      },
+      "properties": {
+        "city": "佛山",
+        "province": "广东",
+        "total": 1,
+        "risk_score": 100,
+        "risk_dominant": "very_high",
+        "count_955": 0,
+        "count_965": 0,
+        "count_996": 1
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          120.7555,
+          30.7461
+        ]
+      },
+      "properties": {
+        "city": "嘉兴",
+        "province": "浙江",
+        "total": 1,
+        "risk_score": 30,
+        "risk_dominant": "medium",
+        "count_955": 0,
+        "count_965": 0,
+        "count_996": 1
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          112.5489,
+          37.8706
+        ]
+      },
+      "properties": {
+        "city": "太原",
+        "province": "山西",
+        "total": 1,
+        "risk_score": 100,
+        "risk_dominant": "very_high",
+        "count_955": 0,
+        "count_965": 0,
+        "count_996": 1
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          117.0894,
+          36.1885
+        ]
+      },
+      "properties": {
+        "city": "泰安",
+        "province": "山东",
+        "total": 1,
+        "risk_score": 100,
+        "risk_dominant": "very_high",
+        "count_955": 0,
+        "count_965": 0,
+        "count_996": 1
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          113.5767,
+          22.2707
+        ]
+      },
+      "properties": {
+        "city": "珠海",
+        "province": "广东",
+        "total": 1,
+        "risk_score": 100,
+        "risk_dominant": "very_high",
+        "count_955": 0,
+        "count_965": 0,
+        "count_996": 1
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          120.3826,
+          36.0671
+        ]
+      },
+      "properties": {
+        "city": "青岛",
+        "province": "山东",
+        "total": 1,
+        "risk_score": 100,
+        "risk_dominant": "very_high",
+        "count_955": 0,
+        "count_965": 0,
+        "count_996": 1
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          119.107,
+          36.7094
+        ]
+      },
+      "properties": {
+        "city": "潍坊",
+        "province": "山东",
+        "total": 1,
+        "risk_score": 65,
+        "risk_dominant": "high",
+        "count_955": 0,
+        "count_965": 0,
+        "count_996": 1
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          108.3669,
+          22.817
+        ]
+      },
+      "properties": {
+        "city": "南宁",
+        "province": "广西",
+        "total": 1,
+        "risk_score": 65,
+        "risk_dominant": "high",
+        "count_955": 0,
+        "count_965": 0,
+        "count_996": 1
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          118.508,
+          31.6894
+        ]
+      },
+      "properties": {
+        "city": "马鞍山",
+        "province": "安徽",
+        "total": 1,
+        "risk_score": 100,
+        "risk_dominant": "very_high",
+        "count_955": 0,
+        "count_965": 0,
+        "count_996": 1
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.544,
+          29.8683
+        ]
+      },
+      "properties": {
+        "city": "宁波",
+        "province": "浙江",
+        "total": 1,
+        "risk_score": 100,
+        "risk_dominant": "very_high",
+        "count_955": 0,
+        "count_965": 0,
+        "count_996": 1
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          114.4153,
+          23.1115
+        ]
+      },
+      "properties": {
+        "city": "惠州",
+        "province": "广东",
+        "total": 1,
+        "risk_score": 100,
+        "risk_dominant": "very_high",
+        "count_955": 0,
+        "count_965": 0,
+        "count_996": 1
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          119.6915,
+          29.7936
+        ]
+      },
+      "properties": {
+        "city": "桐庐",
+        "province": "浙江",
+        "total": 1,
+        "risk_score": 65,
+        "risk_dominant": "high",
+        "count_955": 0,
+        "count_965": 0,
+        "count_996": 1
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          102.8329,
+          24.8801
+        ]
+      },
+      "properties": {
+        "city": "昆明",
+        "province": "云南",
+        "total": 1,
+        "risk_score": 100,
+        "risk_dominant": "very_high",
+        "count_955": 0,
+        "count_965": 0,
+        "count_996": 1
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          119.6005,
+          39.9354
+        ]
+      },
+      "properties": {
+        "city": "秦皇岛",
+        "province": "河北",
+        "total": 1,
+        "risk_score": 30,
+        "risk_dominant": "medium",
+        "count_955": 0,
+        "count_965": 0,
+        "count_996": 1
+      }
+    }
+  ]
+}
