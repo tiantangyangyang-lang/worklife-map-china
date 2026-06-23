@@ -53,8 +53,11 @@ server.log
 # Skills directory
 /skills/
 
-# Internal deployment artifacts (issue #5: 已从仓库中删除, 不再追踪)
-/.env
-/db/
+# Internal build artifacts (不提交到 git)
 /tool-results/
-/.zscripts/
+/.next/
+
+# .env 含数据库路径等本地配置, 不提交 (但 .zscripts/ 和 db/custom.db 需要,
+# 因为框架部署管线依赖 .zscripts/dev.sh 启动, db/custom.db 是 build.sh 必需的占位文件)
+.env*
+
