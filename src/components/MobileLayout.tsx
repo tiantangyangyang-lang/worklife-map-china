@@ -5,7 +5,7 @@
 // issue #4: 顶部增加"更多"菜单 (上传数据 / 导出数据 / 关于项目)
 // ============================================================
 import { useState } from 'react';
-import { Filter, SlidersHorizontal, MapPin, X, ChevronDown, MoreVertical, UploadCloud, Download, Info } from 'lucide-react';
+import { Filter, SlidersHorizontal, MapPin, X, ChevronDown, MoreVertical, UploadCloud, Download, Info, FileDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -37,7 +37,9 @@ import { Legend } from './Legend';
 import { SearchBar } from './SearchBar';
 import { UploadExcel } from './UploadExcel';
 import { ExportMenuItems, useExportRecords } from './ExportButton';
+import { SAMPLE_EXCEL_URL, SAMPLE_EXCEL_FILENAME } from './DownloadSampleButton';
 import { useMapStore } from '@/store/useMapStore';
+import { toast } from 'sonner';
 
 export function MobileLayout() {
   const [filterOpen, setFilterOpen] = useState(false);
@@ -56,6 +58,17 @@ export function MobileLayout() {
 
   // 导出逻辑 (共享 hook)
   const { loading: exportLoading, doExport, allRecords, filteredRecords } = useExportRecords();
+
+  // issue #3: 下载样例 (移动端"更多"菜单用, 直接 <a> 触发避免依赖按钮组件)
+  const handleDownloadSample = () => {
+    const a = document.createElement('a');
+    a.href = SAMPLE_EXCEL_URL;
+    a.download = SAMPLE_EXCEL_FILENAME;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    toast.success('样例文件已开始下载');
+  };
 
   const activeFilterCount =
     filter.cities.length + filter.workSystems.length + filter.weekendTypes.length +
@@ -121,6 +134,14 @@ export function MobileLayout() {
             >
               <UploadCloud className="w-3.5 h-3.5 mr-2 text-emerald-600" />
               <span className="text-sm">上传数据</span>
+            </DropdownMenuItem>
+            {/* issue #3: 下载样例 (放在上传数据 / 导出数据之间) */}
+            <DropdownMenuItem
+              onClick={() => { setMoreMenuOpen(false); handleDownloadSample(); }}
+              className="cursor-pointer"
+            >
+              <FileDown className="w-3.5 h-3.5 mr-2 text-emerald-600" />
+              <span className="text-sm">下载样例</span>
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => { setMoreMenuOpen(false); setExportSheetOpen(true); }}
@@ -221,7 +242,7 @@ export function MobileLayout() {
           </DialogHeader>
           <div className="text-sm text-slate-600 space-y-3 leading-relaxed">
             <p>
-              本项目接收用户上传的 955/965/996 公司作息数据 (Excel / CSV),
+              本项目接收用户上传的 955/965/996 公司作息数据 (Excel: .xlsx / .xls),
               自动清洗、分类、工作强度评级后, 在中国地图上以城市为单位展示
               公司作息情况。
             </p>

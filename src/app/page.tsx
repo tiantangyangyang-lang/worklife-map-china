@@ -12,6 +12,7 @@ import { CityDetail } from '@/components/CityDetail';
 import { Legend } from '@/components/Legend';
 import { UploadExcel } from '@/components/UploadExcel';
 import { ExportButton } from '@/components/ExportButton';
+import { DownloadSampleButton } from '@/components/DownloadSampleButton';
 import { MobileLayout } from '@/components/MobileLayout';
 import { useMapStore } from '@/store/useMapStore';
 import { useIsMobile } from '@/hooks/use-media-query';
@@ -122,6 +123,12 @@ export default function Home() {
             </span>
           )}
           <UploadExcel />
+          <DownloadSampleButton
+            label="下载样例"
+            variant="outline"
+            size="sm"
+            className="bg-white/80 backdrop-blur-sm"
+          />
           <ExportButton />
           <Dialog>
             <DialogTrigger asChild>
@@ -138,7 +145,7 @@ export default function Home() {
               </DialogHeader>
               <div className="text-sm text-slate-600 space-y-3 leading-relaxed">
                 <p>
-                  本项目接收用户上传的 955/965/996 公司作息数据 (Excel / CSV),
+                  本项目接收用户上传的 955/965/996 公司作息数据 (Excel: .xlsx / .xls),
                   自动清洗、分类、工作强度评级后, 在中国地图上以城市为单位展示
                   公司作息情况。
                 </p>

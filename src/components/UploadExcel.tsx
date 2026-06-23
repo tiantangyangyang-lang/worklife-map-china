@@ -13,6 +13,7 @@ import { parseExcelFile } from '@/lib/parse-excel';
 import { buildParseReport, type ParseReport } from '@/lib/parse-report';
 import { RISK_COLORS, WORK_SYSTEM_LABELS } from '@/lib/types';
 import type { CompanyRecord } from '@/lib/types';
+import { DownloadSampleButton, SAMPLE_EXCEL_URL, SAMPLE_EXCEL_FILENAME } from '@/components/DownloadSampleButton';
 import { toast } from 'sonner';
 import {
   Dialog,
@@ -63,7 +64,23 @@ export function UploadExcel({ open: controlledOpen, onOpenChange, hideTrigger }:
     try {
       const records = await parseExcelFile(file);
       if (records.length === 0) {
-        toast.error('未在文件中识别到 955/965/996 数据, 请检查 Excel 格式');
+        // issue #4: 解析不到记录时, 提示用户下载样例按格式整理
+        toast.error('未在文件中识别到 955/965/996 数据', {
+          duration: 6000,
+          description: `请检查 Excel 格式, 或下载样例文件 ${SAMPLE_EXCEL_FILENAME} 按格式整理后再上传。`,
+          action: {
+            label: '下载样例',
+            onClick: () => {
+              // 直接触发样例下载
+              const a = document.createElement('a');
+              a.href = SAMPLE_EXCEL_URL;
+              a.download = SAMPLE_EXCEL_FILENAME;
+              document.body.appendChild(a);
+              a.click();
+              document.body.removeChild(a);
+            },
+          },
+        });
         reset();
         return;
       }
@@ -74,7 +91,21 @@ export function UploadExcel({ open: controlledOpen, onOpenChange, hideTrigger }:
       setStage('review');
     } catch (err) {
       console.error(err);
-      toast.error(`解析失败: ${err instanceof Error ? err.message : '未知错误'}`);
+      toast.error(`解析失败: ${err instanceof Error ? err.message : '未知错误'}`, {
+        duration: 6000,
+        description: `建议下载样例文件 ${SAMPLE_EXCEL_FILENAME} 按格式整理后再上传。`,
+        action: {
+          label: '下载样例',
+          onClick: () => {
+            const a = document.createElement('a');
+            a.href = SAMPLE_EXCEL_URL;
+            a.download = SAMPLE_EXCEL_FILENAME;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+          },
+        },
+      });
       reset();
     }
   };
@@ -164,6 +195,17 @@ export function UploadExcel({ open: controlledOpen, onOpenChange, hideTrigger }:
               <div className="mt-2 text-slate-500">
                 详细字段说明请参考 <code className="bg-white px-1 rounded">docs/EXCEL_IMPORT.md</code>
               </div>
+            </div>
+
+            {/* issue #2: 醒目的下载 Excel 样例文件按钮 */}
+            <div className="bg-emerald-50 border border-emerald-200 rounded-md p-3 flex flex-col items-start gap-1">
+              <DownloadSampleButton
+                label="下载 Excel 样例文件"
+                variant="default"
+                size="sm"
+                className="bg-emerald-600 hover:bg-emerald-700 text-white w-full"
+                hint
+              />
             </div>
 
             <div className="flex items-center gap-2 text-xs text-amber-600">
