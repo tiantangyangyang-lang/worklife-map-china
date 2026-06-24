@@ -16,6 +16,7 @@ import { DownloadSampleButton } from '@/components/DownloadSampleButton';
 import { MobileLayout } from '@/components/MobileLayout';
 import { useMapStore } from '@/store/useMapStore';
 import { useIsMobile } from '@/hooks/use-media-query';
+import { useDatasetVersionPoller } from '@/hooks/use-dataset-version-poller';
 import { parseExcelBuffer } from '@/lib/parse-excel';
 import { Github, Info, ShieldAlert, MapPin, Loader2, AlertCircle } from 'lucide-react';
 import {
@@ -33,21 +34,48 @@ export default function Home() {
   const loading = useMapStore(s => s.loading);
   const error = useMapStore(s => s.error);
   const setRecords = useMapStore(s => s.setRecords);
+  const loadDatasetFromApi = useMapStore(s => s.loadDatasetFromApi);
   const setError = useMapStore(s => s.setError);
   const setLoading = useMapStore(s => s.setLoading);
   const dataSource = useMapStore(s => s.dataSource);
 
-  // 启动时加载预置的示例数据
+  // 启动公共数据版本轮询 (仅在 API 模式下生效, 内部自管理)
+  useDatasetVersionPoller();
+
+  // 启动时加载公共数据: 优先 API, fallback 到 public/data 预置示例
   useEffect(() => {
     let cancelled = false;
-    async function loadExample() {
+    async function loadData() {
       try {
         setLoading(true);
+
+        // ===== 优先尝试 API: GET /api/dataset/latest =====
+        try {
+          const apiRes = await fetch('/api/dataset/latest', { cache: 'no-store' });
+          if (apiRes.ok) {
+            const data = await apiRes.json();
+            if (!cancelled && data && Array.isArray(data.records) && data.records.length > 0) {
+              loadDatasetFromApi({
+                version: data.version,
+                file_name: data.file_name,
+                records: data.records,
+                city_summary: data.city_summary,
+              });
+              return;
+            }
+          }
+          // 404 / 503 都正常, fallback 到预置数据
+        } catch (apiErr) {
+          console.warn('[loadData] API failed, falling back to static data:', apiErr);
+        }
+
+        // ===== Fallback: public/data 预置示例 =====
         const res = await fetch('/data/normalized_companies.json');
         if (res.ok) {
           const data = await res.json();
           if (!cancelled && Array.isArray(data) && data.length > 0) {
-            setRecords(data, '中国公司作息情况.xlsx (示例)');
+            setRecords(data, '中国公司作息情况.xlsx (预置示例)');
+            useMapStore.setState({ dataMode: 'fallback' });
             return;
           }
         }
@@ -57,16 +85,17 @@ export default function Home() {
         const records = parseExcelBuffer(buffer, '中国公司作息情况.xlsx');
         if (cancelled) return;
         if (records.length === 0) throw new Error('示例数据为空');
-        setRecords(records, '中国公司作息情况.xlsx (示例)');
+        setRecords(records, '中国公司作息情况.xlsx (预置示例)');
+        useMapStore.setState({ dataMode: 'fallback' });
       } catch (e) {
         if (cancelled) return;
-        console.error('Failed to load example data:', e);
-        setError(e instanceof Error ? e.message : '加载示例数据失败');
+        console.error('Failed to load data:', e);
+        setError(e instanceof Error ? e.message : '加载数据失败');
       }
     }
-    loadExample();
+    loadData();
     return () => { cancelled = true; };
-  }, [setRecords, setError, setLoading]);
+  }, [setRecords, loadDatasetFromApi, setError, setLoading]);
 
   // 加载提示 (避免布局闪烁, 在两种布局下都显示)
   if (loading && !error) {
@@ -74,7 +103,7 @@ export default function Home() {
       <div className="h-screen flex items-center justify-center bg-slate-50">
         <div className="flex flex-col items-center gap-3">
           <Loader2 className="w-8 h-8 text-emerald-500 animate-spin" />
-          <div className="text-slate-500 text-sm">正在加载示例数据...</div>
+          <div className="text-slate-500 text-sm">正在加载公共作息数据...</div>
         </div>
       </div>
     );

@@ -100,22 +100,88 @@ npm run start
 # 或 pnpm / bun 对应命令
 ```
 
-## 📊 使用预置示例数据
+## 📊 数据来源与加载机制
 
-启动后系统会自动加载 `public/data/normalized_companies.json` 作为示例数据:
+网站启动时按以下优先级加载作息数据:
 
+1. **优先**: 调用 `GET /api/dataset/latest` 从 Supabase 数据库读取最新公共数据集
+2. **Fallback**: 如果数据库未配置或没有数据, 退回到 `public/data/normalized_companies.json` 预置示例数据
+
+预置示例数据:
 - 源文件: `data/中国公司作息情况.example.xlsx`
 - 解析后: **371 条作息记录**, 覆盖 **38 个城市**
 - 分布: 955 区域 139 条 / 965 区域 11 条 / 996 区域 221 条
 
-## 📤 上传你自己的 Excel
+## 📤 管理员发布公共数据 (V4 公共数据发布模式)
 
-1. 点击右上角"上传数据"按钮
-2. 选择或拖拽 `.xlsx` 文件 (浏览器本地解析, 不上传服务器)
-3. 查看解析报告: 记录数 / 区域识别 / 城市定位 / 无法定位的城市 / 前 20 条预览
-4. 点击"确认导入"替换当前数据, 或"取消"放弃
+本项目采用 **管理员发布** 模式: 只有知道管理员密码的人才能上传 Excel,
+上传后数据保存到 Supabase 数据库, **所有用户** 打开网站都会读到最新公共数据。
+
+### 上传流程
+
+1. 点击右上角"上传数据"按钮, 弹窗显示
+2. 输入**管理员密码** (从环境变量 `ADMIN_UPLOAD_PASSWORD` 读取)
+3. 选择或拖拽 `.xlsx` 文件
+4. 浏览器本地解析 → 生成标准化 records
+5. 调用 `POST /api/admin/import` 把 records 保存到数据库 (version 自增)
+6. 保存成功后, 当前页面立即更新地图
+7. toast 提示: "公共数据已更新, 所有用户将看到最新地图"
+
+### 已打开页面的用户自动同步
+
+页面每 **10 秒** 调用 `GET /api/dataset/latest-meta` 检查 version:
+- 如果 version 变化, 自动重新拉取 `GET /api/dataset/latest`
+- 更新地图和统计卡片
+- toast 提示: "公共数据已更新, 地图已同步"
+
+### 权限模型说明
+
+- ✅ **管理员上传**: 知道 `ADMIN_UPLOAD_PASSWORD` 的人可以发布公共数据, 直接覆盖所有用户看到的内容
+- ❌ **普通用户上传不应直接覆盖公共数据**: 普通用户没有密码, 无法调用 `POST /api/admin/import`
+- 🔜 **用户投稿**: 如需让普通用户提交数据, 需要后续增加审核系统 (投稿 → 审核 → 发布), 不能直接让前端写入公共数据集
 
 详细格式要求见 [`docs/EXCEL_IMPORT.md`](docs/EXCEL_IMPORT.md)
+
+## 🗄️ Supabase 数据库配置
+
+### 1. 创建 Supabase 项目
+
+访问 [supabase.com](https://supabase.com) 创建项目, 在 SQL Editor 执行 `supabase/schema.sql` 创建 `datasets` 表。
+
+### 2. 配置环境变量
+
+复制 `.env.example` 为 `.env.local`, 填入:
+
+```bash
+SUPABASE_URL=https://your-project-ref.supabase.co
+SUPABASE_SERVICE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...  # service_role key
+ADMIN_UPLOAD_PASSWORD=your-strong-password-here
+```
+
+> ⚠️ `SUPABASE_SERVICE_KEY` 是 service_role key, 拥有完全数据库权限, **绝不能**暴露给浏览器。本项目仅在服务端 API routes 中使用它。
+
+### 3. datasets 表结构
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `id` | bigint (PK) | 自增主键 |
+| `version` | bigint | 版本号, 每次上传 +1, 客户端轮询比较用 |
+| `file_name` | text | 上传的 Excel 文件名 |
+| `record_count` | integer | 记录数 |
+| `city_count` | integer | 城市数 |
+| `records` | jsonb | 标准化公司记录数组 |
+| `city_summary` | jsonb | 城市聚合统计 |
+| `geojson` | jsonb | GeoJSON FeatureCollection |
+| `is_active` | boolean | 是否为当前激活版本 (同一时间只有一条 true) |
+| `created_at` | timestamptz | 创建时间 |
+
+### 4. API 接口
+
+| 方法 | 路径 | 说明 |
+| --- | --- | --- |
+| GET | `/api/dataset/latest` | 返回当前激活数据集 (含 records/city_summary/geojson) |
+| GET | `/api/dataset/latest-meta` | 返回轻量元信息 (仅 version 等, 轮询用) |
+| POST | `/api/admin/import` | 管理员上传 (需密码), 保存新版本 |
 
 ## 🔧 重新生成预置数据
 

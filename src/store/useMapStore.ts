@@ -18,6 +18,10 @@ interface MapStore {
   loading: boolean;
   error: string | null;
   dataSource: string; // 数据来源名称
+  /** 当前数据集版本号 (来自 API /api/dataset/latest), 用于轮询比较; null 表示未从 API 加载 */
+  datasetVersion: number | null;
+  /** 数据来源模式: 'api' = 公共数据库 / 'fallback' = public/data 预置 */
+  dataMode: 'api' | 'fallback' | 'unknown';
 
   // 交互状态
   selectedCity: string | null;
@@ -29,6 +33,20 @@ interface MapStore {
 
   // Actions
   setRecords: (records: CompanyRecord[], source: string) => void;
+  /**
+   * 从 API 数据集响应加载数据 (公共数据模式)
+   * @param payload /api/dataset/latest 返回的数据
+   * @param mode 'api' 表示来自数据库
+   */
+  loadDatasetFromApi: (
+    payload: {
+      version: number;
+      file_name: string;
+      records: CompanyRecord[];
+      city_summary?: CitySummary[];
+    },
+    options?: { silent?: boolean }
+  ) => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   selectCity: (city: string | null) => void;
@@ -88,6 +106,8 @@ export const useMapStore = create<MapStore>((set, get) => ({
   loading: true,
   error: null,
   dataSource: '',
+  datasetVersion: null,
+  dataMode: 'unknown',
   selectedCity: null,
   selectedCompany: null,
   hoveredCity: null,
@@ -106,6 +126,31 @@ export const useMapStore = create<MapStore>((set, get) => ({
       loading: false,
       error: null,
       dataSource: source,
+    });
+  },
+
+  loadDatasetFromApi: (payload, options) => {
+    const { filter } = get();
+    const records = payload.records;
+    const filtered = applyFilter(records, filter);
+    // 优先用服务端预计算的 city_summary (避免重复计算); 没有则本地算
+    const summaries = payload.city_summary && payload.city_summary.length > 0
+      ? payload.city_summary
+      : buildCitySummary(filtered);
+    const stats = buildGlobalStats(filtered);
+    const silent = options?.silent ?? false;
+    set({
+      allRecords: records,
+      filteredRecords: filtered,
+      citySummaries: summaries,
+      globalStats: stats,
+      loading: false,
+      error: null,
+      dataSource: payload.file_name,
+      datasetVersion: payload.version,
+      dataMode: 'api',
+      // 静默更新 (轮询触发的) 不重置选中状态, 避免打断用户
+      ...(silent ? {} : { selectedCity: null, selectedCompany: null }),
     });
   },
 
