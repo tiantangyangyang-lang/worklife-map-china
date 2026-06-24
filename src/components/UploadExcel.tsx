@@ -19,7 +19,7 @@ import { Input } from '@/components/ui/input';
 import { useMapStore } from '@/store/useMapStore';
 import { parseExcelFile } from '@/lib/parse-excel';
 import { buildCitySummary, buildGeoJSON } from '@/lib/aggregate';
-import { DownloadSampleButton, SAMPLE_EXCEL_URL, SAMPLE_EXCEL_FILENAME } from '@/components/DownloadSampleButton';
+import { DownloadSampleButton, SAMPLE_EXCEL_URL, SAMPLE_EXCEL_FILENAME, SAMPLE_EXCEL_V2_URL, SAMPLE_EXCEL_V2_FILENAME } from '@/components/DownloadSampleButton';
 import { toast } from 'sonner';
 import {
   Dialog,
@@ -297,20 +297,45 @@ export function UploadExcel({ open: controlledOpen, onOpenChange, hideTrigger }:
               <li>"965较差工作制度公司名单" → 城市 | 公司 | 时间 | 规则 | 证据</li>
               <li>"996...高强度作息记录" → 城市 | 公司 | 时间 | 规则 | 证据 [+ 证据2/3/4]</li>
             </ul>
+            <div className="mt-2 pt-2 border-t border-slate-200">
+              <div className="font-semibold text-slate-700 mb-1">V2 可选字段 (公司点位地图)</div>
+              <div>在证据列之后可追加 6 列: 省份 | 区县 | 详细地址 | 经度 | 纬度 | 坐标系</div>
+              <div className="mt-1 text-slate-500">
+                有经纬度的记录会显示为<strong className="text-emerald-700">公司精确点位</strong>; 无经纬度则退回城市级点位。
+              </div>
+            </div>
             <div className="mt-2 text-slate-500">
               详细字段说明请参考 <code className="bg-white px-1 rounded">docs/EXCEL_IMPORT.md</code>
             </div>
           </div>
 
-          {/* 下载样例按钮 (issue #9 保留) */}
-          <div className="bg-emerald-50 border border-emerald-200 rounded-md p-3 flex flex-col items-start gap-1">
+          {/* 下载样例按钮 (含 V2 公司点位模板) */}
+          <div className="bg-emerald-50 border border-emerald-200 rounded-md p-3 space-y-2">
             <DownloadSampleButton
-              label="下载 Excel 样例文件"
+              label="下载 Excel 样例文件 (基础版)"
               variant="default"
               size="sm"
               className="bg-emerald-600 hover:bg-emerald-700 text-white w-full"
-              hint
             />
+            <button
+              type="button"
+              onClick={() => {
+                const a = document.createElement('a');
+                a.href = SAMPLE_EXCEL_V2_URL;
+                a.download = SAMPLE_EXCEL_V2_FILENAME;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                toast.success('V2 样例 (含公司点位字段) 已开始下载');
+              }}
+              className="w-full text-xs text-emerald-700 hover:text-emerald-800 underline underline-offset-2"
+            >
+              下载 V2 样例 (含省份/区县/地址/经纬度/坐标系字段)
+            </button>
+            <div className="text-[11px] text-slate-500 flex items-start gap-1">
+              <span className="text-emerald-500 shrink-0">💡</span>
+              <span>建议先按样例格式整理后再上传。V2 样例含公司经纬度, 可使用"公司点位"地图模式。</span>
+            </div>
           </div>
 
           <div className="flex items-center gap-2 text-xs text-amber-600">

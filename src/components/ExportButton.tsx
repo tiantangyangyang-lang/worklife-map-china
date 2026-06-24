@@ -7,7 +7,7 @@ import { useState } from 'react';
 import { Download, FileJson, Map, FileText, Loader2, Database, Globe } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useMapStore } from '@/store/useMapStore';
-import { buildCitySummary, buildGeoJSON } from '@/lib/aggregate';
+import { buildCitySummary, buildGeoJSON, buildCompanyGeoJSON } from '@/lib/aggregate';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -35,7 +35,7 @@ function formatDate(d: Date) {
   return d.toISOString().slice(0, 10);
 }
 
-type ExportType = 'normalized' | 'city' | 'geojson' | 'csv';
+type ExportType = 'normalized' | 'city' | 'geojson' | 'company_geojson' | 'csv';
 
 /** 共享导出逻辑, 桌面 DropdownMenu 和移动端 Sheet 都用这个 */
 export function useExportRecords() {
@@ -76,6 +76,14 @@ export function useExportRecords() {
           const content = JSON.stringify(geojson, null, 2);
           downloadBlob(content, `map${suffix}_${dateStr}.geojson`, 'application/geo+json');
           toast.success(`已导出 ${geojson.features.length} 个城市点位 GeoJSON (${useFiltered ? '当前筛选' : '全量'})`);
+          break;
+        }
+        case 'company_geojson': {
+          // V2 公司级 GeoJSON: 有公司坐标的导出精确 Point, 无坐标的用城市中心 fallback
+          const geojson = buildCompanyGeoJSON(records);
+          const content = JSON.stringify(geojson, null, 2);
+          downloadBlob(content, `companies_map${suffix}_${dateStr}.geojson`, 'application/geo+json');
+          toast.success(`已导出 ${geojson.features.length} 个公司点位 GeoJSON (${useFiltered ? '当前筛选' : '全量'})`);
           break;
         }
         case 'csv': {
@@ -168,12 +176,21 @@ export function ExportMenuItems({
 
       <div className="h-2" />
 
-      {/* GeoJSON */}
+      {/* GeoJSON - 城市级 */}
       <div className="px-2 py-1 text-[10px] font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1">
-        <Globe className="w-3 h-3" />地图 GeoJSON
+        <Globe className="w-3 h-3" />地图 GeoJSON (城市级)
       </div>
       <button onClick={() => handle('geojson', false)} className="w-full px-2 py-1.5 text-left text-sm hover:bg-slate-50 rounded">全量数据</button>
       <button onClick={() => handle('geojson', true)} className="w-full px-2 py-1.5 text-left text-sm hover:bg-slate-50 rounded">当前筛选</button>
+
+      <div className="h-2" />
+
+      {/* GeoJSON - 公司级 (V2) */}
+      <div className="px-2 py-1 text-[10px] font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1">
+        <Map className="w-3 h-3" />地图 GeoJSON (公司点位)
+      </div>
+      <button onClick={() => handle('company_geojson', false)} className="w-full px-2 py-1.5 text-left text-sm hover:bg-slate-50 rounded">全量数据</button>
+      <button onClick={() => handle('company_geojson', true)} className="w-full px-2 py-1.5 text-left text-sm hover:bg-slate-50 rounded">当前筛选</button>
 
       <div className="h-2" />
 
@@ -245,15 +262,30 @@ export function ExportButton() {
 
         <DropdownMenuSeparator />
 
-        {/* GeoJSON */}
+        {/* GeoJSON - 城市级 */}
         <DropdownMenuGroup>
           <div className="px-2 py-1 text-[10px] font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1">
-            <Globe className="w-3 h-3" />地图 GeoJSON
+            <Globe className="w-3 h-3" />地图 GeoJSON (城市级)
           </div>
           <DropdownMenuItem onClick={() => doExport('geojson', false)} className="cursor-pointer">
             <span className="text-sm">全量数据</span>
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => doExport('geojson', true)} className="cursor-pointer">
+            <span className="text-sm">当前筛选</span>
+          </DropdownMenuItem>
+        </DropdownMenuGroup>
+
+        <DropdownMenuSeparator />
+
+        {/* GeoJSON - 公司级 (V2) */}
+        <DropdownMenuGroup>
+          <div className="px-2 py-1 text-[10px] font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1">
+            <Map className="w-3 h-3" />地图 GeoJSON (公司点位)
+          </div>
+          <DropdownMenuItem onClick={() => doExport('company_geojson', false)} className="cursor-pointer">
+            <span className="text-sm">全量数据</span>
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => doExport('company_geojson', true)} className="cursor-pointer">
             <span className="text-sm">当前筛选</span>
           </DropdownMenuItem>
         </DropdownMenuGroup>

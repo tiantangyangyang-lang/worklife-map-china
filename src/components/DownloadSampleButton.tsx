@@ -13,6 +13,10 @@ export const SAMPLE_EXCEL_URL = '/data/中国公司作息情况.example.xlsx';
 /** 样例文件的下载文件名 */
 export const SAMPLE_EXCEL_FILENAME = '中国公司作息情况.example.xlsx';
 
+/** V2 样例文件 (含公司点位字段: 省份/区县/地址/经纬度/坐标系) */
+export const SAMPLE_EXCEL_V2_URL = '/data/中国公司作息情况.example.v2.xlsx';
+export const SAMPLE_EXCEL_V2_FILENAME = '中国公司作息情况.example.v2.xlsx';
+
 interface DownloadSampleButtonProps {
   /** 按钮文案, 默认"下载样例" */
   label?: string;

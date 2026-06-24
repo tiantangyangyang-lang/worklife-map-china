@@ -33,6 +33,8 @@ import { FilterPanel } from './FilterPanel';
 import { CityDetail } from './CityDetail';
 import { StatsPanel } from './StatsPanel';
 import { MapView } from './MapView';
+import { CompanyMapView } from './CompanyMapView';
+import { MapModeSwitcher } from './MapModeSwitcher';
 import { Legend } from './Legend';
 import { SearchBar } from './SearchBar';
 import { UploadExcel } from './UploadExcel';
@@ -55,6 +57,7 @@ export function MobileLayout() {
   const selectCity = useMapStore(s => s.selectCity);
   const selectCompany = useMapStore(s => s.selectCompany);
   const filter = useMapStore(s => s.filter);
+  const mapMode = useMapStore(s => s.mapMode);
 
   // 导出逻辑 (共享 hook)
   const { loading: exportLoading, doExport, allRecords, filteredRecords } = useExportRecords();
@@ -171,7 +174,8 @@ export function MobileLayout() {
       {/* 地图主区域 (剩余高度) */}
       <div className="flex-1 relative overflow-hidden min-h-0">
         <Legend />
-        <MapView />
+        <MapModeSwitcher />
+        {mapMode === 'company' ? <CompanyMapView /> : <MapView />}
       </div>
 
       {/* 城市详情底部抽屉 (选中城市时弹出) */}

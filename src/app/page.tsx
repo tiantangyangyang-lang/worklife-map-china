@@ -5,6 +5,8 @@
 // ============================================================
 import { useEffect } from 'react';
 import { MapView } from '@/components/MapView';
+import { CompanyMapView } from '@/components/CompanyMapView';
+import { MapModeSwitcher } from '@/components/MapModeSwitcher';
 import { FilterPanel } from '@/components/FilterPanel';
 import { SearchBar } from '@/components/SearchBar';
 import { StatsPanel } from '@/components/StatsPanel';
@@ -38,6 +40,7 @@ export default function Home() {
   const setError = useMapStore(s => s.setError);
   const setLoading = useMapStore(s => s.setLoading);
   const dataSource = useMapStore(s => s.dataSource);
+  const mapMode = useMapStore(s => s.mapMode);
 
   // 启动公共数据版本轮询 (仅在 API 模式下生效, 内部自管理)
   useDatasetVersionPoller();
@@ -137,7 +140,7 @@ export default function Home() {
           </div>
           <div>
             <div className="font-bold text-slate-800 text-base leading-tight">中国公司作息地图</div>
-            <div className="text-[10px] text-slate-400 leading-tight">WorkLifeMap China · V1 城市级</div>
+            <div className="text-[10px] text-slate-400 leading-tight">WorkLifeMap China · V2 城市级 + 公司点位</div>
           </div>
         </div>
 
@@ -212,7 +215,8 @@ export default function Home() {
         {/* 中间地图 */}
         <section className="flex-1 relative overflow-hidden">
           <Legend />
-          <MapView />
+          <MapModeSwitcher />
+          {mapMode === 'company' ? <CompanyMapView /> : <MapView />}
         </section>
 
         {/* 右侧详情 */}
@@ -239,7 +243,7 @@ export default function Home() {
             <Github className="w-3 h-3" />开源项目
           </a>
           <span>·</span>
-          <span>V1.0 城市级地图</span>
+          <span>V2.0 城市级 + 公司点位</span>
         </div>
       </footer>
     </main>

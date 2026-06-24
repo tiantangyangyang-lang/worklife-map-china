@@ -31,11 +31,20 @@ export type RiskLevel = 'low' | 'medium' | 'high' | 'very_high' | 'unknown';
 /** 地理精度 */
 export type GeoLevel = 'city' | 'district' | 'address' | 'coordinate' | 'unknown';
 
+/** 坐标系 (中国常见坐标系) */
+export type CoordSystem = 'wgs84' | 'gcj02' | 'bd09' | 'unknown';
+
+/** 地理数据来源 */
+export type GeoSource = 'manual' | 'excel' | 'api' | 'geocoded' | 'unknown';
+
 /** 可信度等级 */
 export type Confidence = 'A' | 'B' | 'C' | 'D' | 'E';
 
 /** 数据来源区域 (Excel 中的三大区域) */
 export type SectionTitle = '955' | '965' | '996';
+
+/** 地图模式 */
+export type MapMode = 'city' | 'company';
 
 /** 分类依据 (issue #8: 公司详情页展示) */
 export interface ClassificationBasis {
@@ -65,9 +74,14 @@ export interface CompanyRecord {
   city_raw: string;
   city_list: string[];
   province: string;
-  geo_level: GeoLevel;
-  lng: number | null;
-  lat: number | null;
+  // 公司级地理字段 (V2 公司点位地图)
+  district: string;          // 区县 (e.g. "海淀区")
+  address: string;           // 详细地址 (e.g. "中关村大街1号")
+  geo_level: GeoLevel;       // 地理精度: coordinate > address > district > city > unknown
+  lng: number | null;        // 经度 (公司精确坐标 或 城市中心 fallback)
+  lat: number | null;        // 纬度
+  coord_system: CoordSystem; // 坐标系: wgs84 / gcj02 / bd09
+  geo_source: GeoSource;     // 地理数据来源: manual / excel / api / geocoded
   section: SectionTitle;
   work_system: WorkSystem;
   weekend_type: WeekendType;
@@ -105,7 +119,7 @@ export interface CitySummary {
   lat: number;
 }
 
-/** GeoJSON Feature */
+/** GeoJSON Feature (城市聚合模式) */
 export interface GeoJSONFeature {
   type: 'Feature';
   geometry: {
@@ -121,12 +135,45 @@ export interface GeoJSONFeature {
     count_955: number;
     count_965: number;
     count_996: number;
+    geo_level?: string; // V2: 标记城市级或公司级
+  };
+}
+
+/** GeoJSON Feature (公司点位模式 V2) */
+export interface CompanyGeoJSONFeature {
+  type: 'Feature';
+  geometry: {
+    type: 'Point';
+    coordinates: [number, number];
+  };
+  properties: {
+    id: string;
+    company_name: string;
+    city: string;
+    province: string;
+    district: string;
+    address: string;
+    geo_level: GeoLevel;
+    coord_system: CoordSystem;
+    geo_source: GeoSource;
+    section: SectionTitle;
+    work_system: WorkSystem;
+    weekend_type: WeekendType;
+    risk_level: RiskLevel;
+    rule_text: string;
+    confidence: Confidence;
   };
 }
 
 export interface GeoJSONCollection {
   type: 'FeatureCollection';
   features: GeoJSONFeature[];
+}
+
+/** 公司级 GeoJSON Collection (V2) */
+export interface CompanyGeoJSONCollection {
+  type: 'FeatureCollection';
+  features: CompanyGeoJSONFeature[];
 }
 
 /** 筛选条件 */

@@ -2,7 +2,7 @@
 // Zustand 全局状态管理
 // ============================================================
 import { create } from 'zustand';
-import type { CompanyRecord, CitySummary } from '@/lib/types';
+import type { CompanyRecord, CitySummary, MapMode } from '@/lib/types';
 import { buildCitySummary, buildGlobalStats } from '@/lib/aggregate';
 import type { GlobalStats } from '@/lib/aggregate';
 import type { FilterState, WorkSystem, WeekendType, RiskLevel, Confidence } from '@/lib/types';
@@ -28,11 +28,15 @@ interface MapStore {
   selectedCompany: CompanyRecord | null;
   hoveredCity: string | null;
 
+  // 地图模式 (V2 公司点位地图)
+  mapMode: MapMode; // 'city' = 城市聚合, 'company' = 公司点位
+
   // 筛选
   filter: FilterState;
 
   // Actions
   setRecords: (records: CompanyRecord[], source: string) => void;
+  setMapMode: (mode: MapMode) => void;
   /**
    * 从 API 数据集响应加载数据 (公共数据模式)
    * @param payload /api/dataset/latest 返回的数据
@@ -111,6 +115,7 @@ export const useMapStore = create<MapStore>((set, get) => ({
   selectedCity: null,
   selectedCompany: null,
   hoveredCity: null,
+  mapMode: 'city',
   filter: DEFAULT_FILTER,
 
   setRecords: (records, source) => {
@@ -127,6 +132,11 @@ export const useMapStore = create<MapStore>((set, get) => ({
       error: null,
       dataSource: source,
     });
+  },
+
+  setMapMode: (mode) => {
+    // 切换地图模式时清空选中状态, 避免跨模式残留高亮
+    set({ mapMode: mode, selectedCity: null, selectedCompany: null });
   },
 
   loadDatasetFromApi: (payload, options) => {

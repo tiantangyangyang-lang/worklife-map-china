@@ -1,7 +1,7 @@
 // ============================================================
 // 数据聚合: 按城市统计 / 生成 GeoJSON / 强度评分
 // ============================================================
-import type { CompanyRecord, CitySummary, GeoJSONCollection, RiskLevel } from './types';
+import type { CompanyRecord, CitySummary, GeoJSONCollection, CompanyGeoJSONCollection, RiskLevel } from './types';
 
 /** 强度评分权重 (用于城市聚合) */
 const RISK_WEIGHTS: Record<RiskLevel, number> = {
@@ -86,6 +86,11 @@ export function buildCitySummary(records: CompanyRecord[]): CitySummary[] {
 
 /**
  * 生成 GeoJSON FeatureCollection (城市点位)
+ *
+ * V2 升级 (issue #6): 同时支持公司点位 + 城市中心 fallback
+ *   - 有公司经纬度 (geo_level = 'coordinate') 的记录 → 导出公司精确坐标 Point, geo_level = 'coordinate'
+ *   - 无公司经纬度但有城市中心 → 导出城市中心 Point, geo_level = 'city'
+ *   - 无任何坐标 → 跳过
  */
 export function buildGeoJSON(summaries: CitySummary[]): GeoJSONCollection {
   return {
@@ -105,8 +110,51 @@ export function buildGeoJSON(summaries: CitySummary[]): GeoJSONCollection {
         count_955: s.count_955,
         count_965: s.count_965,
         count_996: s.count_996,
+        geo_level: 'city', // 城市聚合模式导出的都是城市级
       },
     })),
+  };
+}
+
+/**
+ * 生成公司级 GeoJSON FeatureCollection (V2 公司点位地图导出)
+ *
+ * 每条有坐标的记录导出为一个 Point Feature:
+ *   - geo_level = 'coordinate' → 公司精确坐标
+ *   - geo_level = 'city'       → 城市中心 fallback
+ *   - lng/lat 为 null          → 跳过
+ */
+export function buildCompanyGeoJSON(records: CompanyRecord[]): CompanyGeoJSONCollection {
+  const features = records
+    .filter(r => r.lng !== null && r.lat !== null)
+    .map(r => ({
+      type: 'Feature' as const,
+      geometry: {
+        type: 'Point' as const,
+        coordinates: [r.lng as number, r.lat as number] as [number, number],
+      },
+      properties: {
+        id: r.id,
+        company_name: r.company_name,
+        city: r.city,
+        province: r.province,
+        district: r.district,
+        address: r.address,
+        geo_level: r.geo_level,
+        coord_system: r.coord_system,
+        geo_source: r.geo_source,
+        section: r.section,
+        work_system: r.work_system,
+        weekend_type: r.weekend_type,
+        risk_level: r.risk_level,
+        rule_text: r.rule_text,
+        confidence: r.confidence,
+      },
+    }));
+
+  return {
+    type: 'FeatureCollection',
+    features,
   };
 }
 

@@ -146,7 +146,23 @@ function CompanyDetailView({ record, onBack }: { record: CompanyRecord; onBack: 
               <MapPin className="w-3 h-3" />
               {record.city || '未知城市'}
               {record.province && <span className="text-slate-400">· {record.province}</span>}
+              {record.district && <span className="text-slate-400">· {record.district}</span>}
             </div>
+            {record.address && (
+              <div className="text-xs text-slate-500 mt-1 flex items-start gap-1">
+                <MapPin className="w-3 h-3 mt-0.5 shrink-0" />
+                <span className="break-words">{record.address}</span>
+              </div>
+            )}
+            {record.geo_level === 'coordinate' && (
+              <div className="text-[11px] text-emerald-600 mt-1 flex items-center gap-1">
+                <span className="px-1.5 py-0.5 bg-emerald-100 rounded">精确坐标</span>
+                <span className="text-slate-400">
+                  {record.lng?.toFixed(4)}, {record.lat?.toFixed(4)}
+                  {record.coord_system !== 'unknown' && ` (${record.coord_system})`}
+                </span>
+              </div>
+            )}
           </div>
         </div>
 
@@ -246,6 +262,17 @@ function CompanyDetailView({ record, onBack }: { record: CompanyRecord; onBack: 
             <div className="flex items-center gap-1.5">
               <ShieldCheck className="w-3 h-3" />
               <span>可信度评级: {CONFIDENCE_LABELS[record.confidence]}</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <MapPin className="w-3 h-3" />
+              <span>
+                地理精度: {record.geo_level === 'coordinate' ? '公司精确坐标' :
+                  record.geo_level === 'address' ? '详细地址' :
+                  record.geo_level === 'district' ? '区县级' :
+                  record.geo_level === 'city' ? '城市级' : '未知'}
+                {record.geo_source !== 'unknown' && ` · 来源 ${record.geo_source}`}
+                {record.coord_system !== 'unknown' && ` · 坐标系 ${record.coord_system}`}
+              </span>
             </div>
           </div>
 
