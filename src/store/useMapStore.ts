@@ -28,6 +28,8 @@ interface MapStore {
   // 交互状态
   selectedCity: string | null;
   selectedCompany: CompanyRecord | null;
+  /** V2.5: 公司点位模式下选中的聚合簇 (同坐标的多条记录) */
+  selectedCompanyCluster: CompanyRecord[] | null;
   hoveredCity: string | null;
 
   // 地图模式 (V2 公司点位地图)
@@ -58,6 +60,8 @@ interface MapStore {
   setError: (error: string | null) => void;
   selectCity: (city: string | null) => void;
   selectCompany: (company: CompanyRecord | null) => void;
+  /** V2.5: 选中一个聚合簇 (公司点位模式点击同坐标的多条记录) */
+  selectCompanyCluster: (records: CompanyRecord[] | null) => void;
   hoverCity: (city: string | null) => void;
   setFilter: (partial: Partial<FilterState>) => void;
   resetFilter: () => void;
@@ -118,6 +122,7 @@ export const useMapStore = create<MapStore>((set, get) => ({
   dataMode: 'unknown',
   selectedCity: null,
   selectedCompany: null,
+  selectedCompanyCluster: null,
   hoveredCity: null,
   mapMode: 'city',
   filter: DEFAULT_FILTER,
@@ -140,7 +145,7 @@ export const useMapStore = create<MapStore>((set, get) => ({
 
   setMapMode: (mode) => {
     // 切换地图模式时清空选中状态, 避免跨模式残留高亮
-    set({ mapMode: mode, selectedCity: null, selectedCompany: null });
+    set({ mapMode: mode, selectedCity: null, selectedCompany: null, selectedCompanyCluster: null });
   },
 
   loadDatasetFromApi: (payload, options) => {
@@ -171,8 +176,13 @@ export const useMapStore = create<MapStore>((set, get) => ({
 
   setLoading: (loading) => set({ loading }),
   setError: (error) => set({ error, loading: false }),
-  selectCity: (city) => set({ selectedCity: city, selectedCompany: null }),
-  selectCompany: (company) => set({ selectedCompany: company }),
+  selectCity: (city) => set({ selectedCity: city, selectedCompany: null, selectedCompanyCluster: null }),
+  selectCompany: (company) => set({ selectedCompany: company, selectedCompanyCluster: null }),
+  selectCompanyCluster: (records) => set({
+    selectedCompanyCluster: records,
+    // 如果簇只有一条记录, 同时设置 selectedCompany 方便详情页复用
+    selectedCompany: records && records.length === 1 ? records[0] : null,
+  }),
   hoverCity: (city) => set({ hoveredCity: city }),
 
   setFilter: (partial) => {

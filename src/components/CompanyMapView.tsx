@@ -31,11 +31,15 @@ const POINT_RADIUS = 5;
 export function CompanyMapView() {
   const filteredRecords = useMapStore(s => s.filteredRecords);
   const selectedCompany = useMapStore(s => s.selectedCompany);
+  const selectedCompanyCluster = useMapStore(s => s.selectedCompanyCluster);
   const selectCompany = useMapStore(s => s.selectCompany);
+  const selectCompanyCluster = useMapStore(s => s.selectCompanyCluster);
 
   const [mapData, setMapData] = useState<ChinaMapData | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [tooltip, setTooltip] = useState<TooltipState>({ visible: false, x: 0, y: 0, record: null });
+  /** V2.5: 悬浮的聚合簇信息 (显示记录数) */
+  const [hoverCluster, setHoverCluster] = useState<{ count: number; records: CompanyRecord[]; topRecord: CompanyRecord } | null>(null);
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
@@ -86,18 +90,52 @@ export function CompanyMapView() {
     setZoom(z => Math.max(0.6, Math.min(6, z + delta)));
   };
 
-  // V2.1 修复: 公司点位模式只显示 geo_level === 'coordinate' 且 lng/lat 不为空的记录
-  // 不要把城市中心 fallback 记录 (geo_level === 'city') 当成公司真实点位显示
+  // V2.5 增强: 公司点位模式只显示 geo_level === 'coordinate' 且 lng/lat 不为空的记录
+  // 同一 lng/lat 的记录聚合成一个点, 点大小表示该坐标记录数量
   const projectedPoints = useMemo(() => {
-    return filteredRecords
-      .filter(r => r.geo_level === 'coordinate' && r.lng !== null && r.lat !== null)
-      .map(r => {
-        const [x, y] = project(r.lng as number, r.lat as number);
-        return { record: r, x, y };
-      });
+    // 过滤出有精确坐标的记录
+    const coordRecords = filteredRecords.filter(
+      r => r.geo_level === 'coordinate' && r.lng !== null && r.lat !== null
+    );
+
+    // 按 "lng,lat" 聚合
+    const clusterMap = new Map<string, { records: CompanyRecord[]; lng: number; lat: number }>();
+    for (const r of coordRecords) {
+      const key = `${r.lng!.toFixed(6)},${r.lat!.toFixed(6)}`;
+      if (!clusterMap.has(key)) {
+        clusterMap.set(key, { records: [], lng: r.lng!, lat: r.lat! });
+      }
+      clusterMap.get(key)!.records.push(r);
+    }
+
+    // 转换为带投影坐标的聚合点
+    return Array.from(clusterMap.values()).map(cluster => {
+      const [x, y] = project(cluster.lng, cluster.lat);
+      return {
+        records: cluster.records,
+        count: cluster.records.length,
+        lng: cluster.lng,
+        lat: cluster.lat,
+        x,
+        y,
+      };
+    });
   }, [filteredRecords]);
 
-  const realCompanyPointCount = projectedPoints.length;
+  /** V2.5: 根据聚合记录数计算点位半径 (4-16px, log 平滑) */
+  function getClusterRadius(count: number): number {
+    if (count <= 0) return 0;
+    const min = 5;
+    const max = 16;
+    const logCount = Math.log(count + 1);
+    const logMax = Math.log(20); // 20 条 → max size
+    return min + (max - min) * Math.min(1, logCount / logMax);
+  }
+
+  const realCompanyPointCount = filteredRecords.filter(
+    r => r.geo_level === 'coordinate' && r.lng !== null && r.lat !== null
+  ).length;
+  const clusterCount = projectedPoints.length; // 聚合后的点位数
   const totalRecords = filteredRecords.length;
   const noCoordCount = totalRecords - realCompanyPointCount;
 
@@ -158,18 +196,26 @@ export function CompanyMapView() {
           </text>
         )}
 
-        {/* 公司点位 */}
+        {/* V2.5 公司点位 (聚合簇, 点大小=记录数) */}
         <g>
-          {projectedPoints.map(({ record, x, y }) => {
-            const isSelected = selectedCompany?.id === record.id;
-            const color = RISK_COLORS[record.risk_level as RiskLevel];
+          {projectedPoints.map((cluster, idx) => {
+            const { records, count, x, y } = cluster;
+            // 取簇内最高强度作为颜色 (very_high > high > medium > low > unknown)
+            const riskOrder = { very_high: 0, high: 1, medium: 2, low: 3, unknown: 4 };
+            const topRecord = [...records].sort((a, b) => riskOrder[a.risk_level] - riskOrder[b.risk_level])[0];
+            const color = RISK_COLORS[topRecord.risk_level as RiskLevel];
+            const radius = getClusterRadius(count);
+            const clusterKey = `${cluster.lng.toFixed(6)},${cluster.lat.toFixed(6)}`;
+            const isSelected = selectedCompanyCluster !== null &&
+              selectedCompanyCluster.length > 0 &&
+              `${selectedCompanyCluster[0].lng?.toFixed(6)},${selectedCompanyCluster[0].lat?.toFixed(6)}` === clusterKey;
             return (
               <g
-                key={record.id}
+                key={clusterKey}
                 transform={`translate(${x}, ${y})`}
                 tabIndex={0}
                 role="button"
-                aria-label={`${record.company_name}, 工作强度 ${color.label}`}
+                aria-label={`${count} 条记录, 最高强度 ${color.label}`}
                 aria-pressed={isSelected}
                 style={{ cursor: 'pointer', outline: isSelected ? `2px solid ${color.stroke}` : 'none', outlineOffset: 2 }}
                 onMouseEnter={(e) => {
@@ -179,8 +225,9 @@ export function CompanyMapView() {
                       visible: true,
                       x: e.clientX - rect.left,
                       y: e.clientY - rect.top,
-                      record,
+                      record: topRecord, // tooltip 显示最高强度记录
                     });
+                    setHoverCluster({ count, records, topRecord });
                   }
                 }}
                 onMouseMove={(e) => {
@@ -191,57 +238,59 @@ export function CompanyMapView() {
                 }}
                 onMouseLeave={() => {
                   setTooltip(prev => ({ ...prev, visible: false }));
+                  setHoverCluster(null);
                 }}
                 onClick={(e) => {
                   e.stopPropagation();
-                  selectCompany(isSelected ? null : record);
+                  selectCompanyCluster(isSelected ? null : records);
                 }}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault();
                     e.stopPropagation();
-                    selectCompany(isSelected ? null : record);
+                    selectCompanyCluster(isSelected ? null : records);
                   }
                 }}
               >
                 {/* 选中脉冲 */}
                 {isSelected && (
-                  <circle r={POINT_RADIUS + 4} fill="none" stroke={color.stroke} strokeWidth={1.5} opacity={0.6}>
-                    <animate attributeName="r" values={`${POINT_RADIUS + 4};${POINT_RADIUS + 10};${POINT_RADIUS + 4}`} dur="2s" repeatCount="indefinite" />
+                  <circle r={radius + 4} fill="none" stroke={color.stroke} strokeWidth={1.5} opacity={0.6}>
+                    <animate attributeName="r" values={`${radius + 4};${radius + 10};${radius + 4}`} dur="2s" repeatCount="indefinite" />
                     <animate attributeName="opacity" values="0.6;0.1;0.6" dur="2s" repeatCount="indefinite" />
                   </circle>
                 )}
                 {/* 阴影 */}
-                <circle r={POINT_RADIUS} fill="rgba(0,0,0,0.15)" cx={0.6} cy={0.6} />
+                <circle r={radius} fill="rgba(0,0,0,0.15)" cx={0.6} cy={0.6} />
                 {/* 主点 */}
                 <circle
-                  r={POINT_RADIUS}
+                  r={radius}
                   fill={color.fill}
                   stroke={isSelected ? color.stroke : '#ffffff'}
                   strokeWidth={isSelected ? 2 : 1}
+                  fillOpacity={0.85}
                 />
                 {/* 强度字母标记 (色弱友好) */}
                 <text
-                  y={2}
+                  y={radius > 8 ? 3 : 2}
                   textAnchor="middle"
-                  fontSize={6}
+                  fontSize={radius > 10 ? 8 : radius > 7 ? 7 : 6}
                   fontWeight={800}
                   fill="#ffffff"
                   style={{ pointerEvents: 'none', letterSpacing: '-0.3px' }}
                 >
                   {color.code}
                 </text>
-                {/* 公司名 (选中或悬浮时显示) */}
-                {(isSelected) && (
+                {/* 记录数 (聚合簇 >1 时显示) */}
+                {count > 1 && (
                   <text
-                    y={-POINT_RADIUS - 3}
+                    y={-radius - 3}
                     textAnchor="middle"
-                    fontSize={10}
+                    fontSize={9}
                     fontWeight={700}
                     fill="#1e293b"
                     style={{ pointerEvents: 'none', paintOrder: 'stroke', stroke: '#ffffff', strokeWidth: 2.5, strokeLinejoin: 'round' }}
                   >
-                    {record.company_name.length > 12 ? record.company_name.slice(0, 12) + '…' : record.company_name}
+                    {count} 条
                   </text>
                 )}
               </g>
@@ -273,6 +322,11 @@ export function CompanyMapView() {
                 {RISK_COLORS[tooltip.record.risk_level as RiskLevel].label}
               </span>
             </div>
+            {hoverCluster && hoverCluster.count > 1 && (
+              <div className="text-[11px] text-emerald-600 font-semibold mb-1.5">
+                该坐标共 {hoverCluster.count} 条记录 (点击查看列表)
+              </div>
+            )}
             <div className="text-xs text-slate-500 mb-1.5">
               {tooltip.record.city}
               {tooltip.record.district && ` · ${tooltip.record.district}`}
@@ -314,12 +368,17 @@ export function CompanyMapView() {
         >⊙</button>
       </div>
 
-      {/* V2.1 统计条: 真实公司点位 / 无精确坐标记录 */}
+      {/* V2.5 统计条: 真实公司点位 / 聚合簇数 / 无精确坐标记录 */}
       <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-sm rounded-lg shadow-md border border-slate-200 px-3 py-2 z-20 text-xs space-y-0.5">
         <div className="font-semibold text-slate-700">公司点位模式</div>
         <div className="text-slate-600">
           真实公司点位：<span className="font-bold text-emerald-600">{realCompanyPointCount}</span> 条
         </div>
+        {clusterCount !== realCompanyPointCount && (
+          <div className="text-slate-500">
+            聚合为 <span className="font-bold text-slate-700">{clusterCount}</span> 个点位
+          </div>
+        )}
         {noCoordCount > 0 && (
           <div className="text-amber-600">
             无精确坐标记录：<span className="font-bold">{noCoordCount}</span> 条
@@ -332,7 +391,7 @@ export function CompanyMapView() {
         )}
       </div>
 
-      {/* 空状态: 没有真实公司坐标 */}
+      {/* V2.5 空状态: 没有真实公司坐标 + 说明 */}
       {realCompanyPointCount === 0 && totalRecords > 0 && (
         <div className="absolute inset-0 flex items-center justify-center bg-white/70 backdrop-blur-sm z-30 p-4">
           <div className="flex flex-col items-center text-center max-w-sm bg-white rounded-lg shadow-lg border border-slate-200 p-5">
@@ -340,9 +399,12 @@ export function CompanyMapView() {
               <SearchX className="w-7 h-7 text-amber-500" />
             </div>
             <div className="text-sm font-semibold text-slate-700 mb-1">当前数据没有公司精确坐标</div>
-            <div className="text-xs text-slate-500 leading-relaxed">
-              公司点位模式需要每条记录包含经纬度 (Excel 第 11/12 列)。<br />
-              无精确坐标记录请切换到 <strong>城市聚合模式</strong> 查看。
+            <div className="text-xs text-slate-500 leading-relaxed mb-2">
+              公司点位模式只展示有精确经纬度的数据。<br />
+              没有经纬度的数据请在城市聚合模式查看。
+            </div>
+            <div className="text-[11px] text-slate-400 leading-relaxed bg-slate-50 rounded p-2 w-full">
+              💡 上传含经纬度的 Excel (列 L/M) 即可在公司点位模式查看精确办公点位。
             </div>
           </div>
         </div>

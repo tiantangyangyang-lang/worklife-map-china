@@ -2,7 +2,7 @@
 
 > 🗺️ 一个开源的中国公司作息数据可视化工具 — 上传 Excel, 自动生成城市级公司作息地图。
 
-![version](https://img.shields.io/badge/version-V2.1-emerald)
+![version](https://img.shields.io/badge/version-V2.5-emerald)
 ![license](https://img.shields.io/badge/license-MIT-blue)
 ![next](https://img.shields.io/badge/Next.js-16-black)
 ![typescript](https://img.shields.io/badge/TypeScript-5-blue)
@@ -154,11 +154,14 @@ npm run start
 
 ```bash
 SUPABASE_URL=https://your-project-ref.supabase.co
-SUPABASE_SERVICE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...  # service_role key
+SUPABASE_SECRET_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...  # 推荐, service_role key
 ADMIN_UPLOAD_PASSWORD=your-strong-password-here
 ```
 
-> ⚠️ `SUPABASE_SERVICE_KEY` 是 service_role key, 拥有完全数据库权限, **绝不能**暴露给浏览器。本项目仅在服务端 API routes 中使用它。
+> 💡 **service_role key 三选一即可, 优先使用 `SUPABASE_SECRET_KEY`**, 兼容 `SUPABASE_SERVICE_KEY` / `SUPABASE_SERVICE_ROLE_KEY`。
+> 代码读取优先级: `SUPABASE_SECRET_KEY` → `SUPABASE_SERVICE_KEY` → `SUPABASE_SERVICE_ROLE_KEY`。
+>
+> ⚠️ service_role key 拥有完全数据库权限, **绝不能**暴露给浏览器。本项目仅在服务端 API routes 中使用它。
 
 ### 3. datasets 表结构
 
@@ -300,7 +303,8 @@ npm run build:map
 | 版本 | 主题 | 状态 |
 | --- | --- | --- |
 | **V1** | 城市级作息地图 (Excel 导入 + 城市聚合 + 搜索筛选 + 多格式导出) | ✅ 已完成 |
-| **V2** | 公共数据发布 + 公司点位字段 (Supabase + 管理员发布 + 经纬度点位 + 双模式切换) | ✅ 当前版本 (V2.1) |
+| **V2** | 公共数据发布 + 公司点位字段 (Supabase + 管理员发布 + 经纬度点位 + 双模式切换) | ✅ 已完成 |
+| **V2.5** | 地图信息增强 (geo_confidence + 明细表格式 + 同坐标聚合 + 数据质量面板 + city_summary 增强) | ✅ 当前版本 |
 | **V3** | 3D / 2.5D 可视化 (3D 地图 + 城市工作强度热力图 + 科技园区密度) | 🔜 规划中 |
 | **V4** | 用户投稿与审核 (投稿 → 审核 → 发布后台 + 证据上传 + 可信度评分细化) | 🔜 规划中 |
 

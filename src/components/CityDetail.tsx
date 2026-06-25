@@ -395,13 +395,105 @@ function EmptyState() {
   );
 }
 
+/** V2.5: 公司点位聚合簇视图 (同坐标的多条记录列表) */
+function CompanyClusterView({ records, onBack }: { records: CompanyRecord[]; onBack: () => void }) {
+  const selectCompany = useMapStore(s => s.selectCompany);
+  const riskOrder = { very_high: 0, high: 1, medium: 2, unknown: 3, low: 4 };
+  const sortedRecords = useMemo(() => {
+    return [...records].sort((a, b) => {
+      const r = riskOrder[a.risk_level] - riskOrder[b.risk_level];
+      if (r !== 0) return r;
+      return a.company_name.localeCompare(b.company_name, 'zh-CN');
+    });
+  }, [records]);
+
+  const first = records[0];
+
+  return (
+    <div className="flex flex-col h-full">
+      <div className="p-4 border-b border-slate-100 bg-white">
+        <Button variant="ghost" size="sm" onClick={onBack} className="text-slate-500 hover:text-slate-700 -ml-2 mb-2">
+          <ArrowLeft className="w-3.5 h-3.5 mr-1" />返回地图
+        </Button>
+        <div className="flex items-start gap-3 mb-2">
+          <div className="w-10 h-10 rounded-lg flex items-center justify-center text-white shrink-0 bg-emerald-600">
+            <Building2 className="w-5 h-5" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h2 className="text-xl font-bold text-slate-800">该坐标共 {records.length} 条记录</h2>
+            <div className="text-sm text-slate-500 flex items-center gap-1 mt-0.5">
+              <MapPin className="w-3 h-3" />
+              {first.city || '未知城市'}
+              {first.province && <span className="text-slate-400">· {first.province}</span>}
+              {first.district && <span className="text-slate-400">· {first.district}</span>}
+            </div>
+            {first.address && (
+              <div className="text-xs text-slate-500 mt-1 flex items-start gap-1">
+                <MapPin className="w-3 h-3 mt-0.5 shrink-0" />
+                <span className="break-words">{first.address}</span>
+              </div>
+            )}
+            <div className="text-[11px] text-emerald-600 mt-1 flex items-center gap-1">
+              <span className="px-1.5 py-0.5 bg-emerald-100 rounded">精确坐标</span>
+              <span className="text-slate-400">
+                {first.lng?.toFixed(4)}, {first.lat?.toFixed(4)}
+                {first.coord_system !== 'unknown' && ` (${first.coord_system})`}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <ScrollArea className="flex-1">
+        <div className="p-3 space-y-1.5">
+          {sortedRecords.map(rec => (
+            <motion.div
+              key={rec.id}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.2 }}
+              onClick={() => selectCompany(rec)}
+              className="bg-white border border-slate-200 rounded-lg p-2.5 cursor-pointer hover:border-emerald-400 hover:shadow-sm transition-all group"
+            >
+              <div className="flex items-start justify-between gap-2 mb-1">
+                <div className="font-semibold text-slate-800 text-sm group-hover:text-emerald-700 line-clamp-1">
+                  {rec.company_name}
+                </div>
+                <span
+                  className="text-[10px] px-1.5 py-0.5 rounded-full text-white font-semibold shrink-0"
+                  style={{ backgroundColor: RISK_COLORS[rec.risk_level].fill }}
+                >
+                  {RISK_COLORS[rec.risk_level].label}
+                </span>
+              </div>
+              <div className="flex flex-wrap items-center gap-1 text-[11px] text-slate-500">
+                <Badge variant="secondary" className="text-[10px] h-4 px-1.5 font-normal">{WORK_SYSTEM_LABELS[rec.work_system]}</Badge>
+                <span>·</span>
+                <span>{rec.weekend_type}</span>
+                {rec.rule_text && (
+                  <>
+                    <span>·</span>
+                    <span className="line-clamp-1 max-w-[180px]">{rec.rule_text}</span>
+                  </>
+                )}
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </ScrollArea>
+    </div>
+  );
+}
+
 export function CityDetail() {
   const selectedCity = useMapStore(s => s.selectedCity);
   const selectedCompany = useMapStore(s => s.selectedCompany);
+  const selectedCompanyCluster = useMapStore(s => s.selectedCompanyCluster);
   const filteredRecords = useMapStore(s => s.filteredRecords);
   const citySummaries = useMapStore(s => s.citySummaries);
   const selectCity = useMapStore(s => s.selectCity);
   const selectCompany = useMapStore(s => s.selectCompany);
+  const selectCompanyCluster = useMapStore(s => s.selectCompanyCluster);
 
   const cityRecords = useMemo(() => {
     if (!selectedCity) return [];
@@ -425,7 +517,26 @@ export function CityDetail() {
             transition={{ duration: 0.2 }}
             className="h-full"
           >
-            <CompanyDetailView record={selectedCompany} onBack={() => selectCompany(null)} />
+            <CompanyDetailView record={selectedCompany} onBack={() => {
+              selectCompany(null);
+              // 如果来自聚合簇, 返回到簇列表而不是空状态
+              if (selectedCompanyCluster && selectedCompanyCluster.length > 1) {
+                // 保持 cluster 选中, CompanyClusterView 会显示
+              } else {
+                selectCompanyCluster(null);
+              }
+            }} />
+          </motion.div>
+        ) : selectedCompanyCluster && selectedCompanyCluster.length > 1 ? (
+          <motion.div
+            key={`cluster-${selectedCompanyCluster[0].lng}-${selectedCompanyCluster[0].lat}`}
+            initial={{ opacity: 0, x: 30 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -30 }}
+            transition={{ duration: 0.2 }}
+            className="h-full"
+          >
+            <CompanyClusterView records={selectedCompanyCluster} onBack={() => selectCompanyCluster(null)} />
           </motion.div>
         ) : selectedCity && citySummary ? (
           <motion.div

@@ -2,7 +2,7 @@
   "name": "company-work-schedule-map",
   "version": "1.0.0",
   "private": true,
-  "description": "中国公司作息地图 — 上传 Excel 自动生成城市级公司作息可视化地图 (V1)",
+  "description": "中国公司作息地图 — 上传 Excel 自动生成城市级 + 公司点位公司作息可视化地图",
   "license": "MIT",
   "scripts": {
     "dev": "next dev -p 3000",

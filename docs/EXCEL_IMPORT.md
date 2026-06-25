@@ -24,6 +24,43 @@ V2 新增 6 个可选字段 (列 I-N), 用于支持**公司点位地图**:
 - 无经纬度 → 退回城市中心点位 (geo_level = 'city')
 - 经纬度必须在中国范围内 (东经 73°-135°, 北纬 18°-54°) 才被视为有效
 
+## V2.5 扩展字段 (可选, 列 O-P)
+
+V2.5 新增 2 个可选字段, 用于手动标注地理精度和来源:
+
+| 列 | 字段 | 示例 | 说明 |
+| -- | ---- | ---- | ---- |
+| O  | 地理精度 | coordinate | coordinate/address/district/city/unknown, 缺省时按经纬度有无推断 |
+| P  | 地理来源 | excel | manual/excel/api/geocoded/unknown, 缺省时按坐标来源推断 |
+
+## V2.5 标准化明细表格式 (可选)
+
+除了三段式格式 (955/965/996 区域), V2.5 还支持**标准化明细表格式**: 一行一条作息记录, 表头自定义列名。
+
+表头列 (中英文均可, 大小写不敏感):
+
+| 列名别名 | 说明 |
+| -------- | ---- |
+| 公司 / company | 公司名称 (必填) |
+| 城市 / city | 城市名 |
+| 省份 / province | 省份 |
+| 区县 / district | 区县 |
+| 详细地址 / address | 详细地址 |
+| 经度 / lng / lon | 经度 |
+| 纬度 / lat | 纬度 |
+| 坐标系 / coord_system | wgs84/gcj02/bd09 |
+| 地理精度 / geo_level | coordinate/address/district/city/unknown |
+| 地理来源 / geo_source | manual/excel/api/geocoded |
+| 工作制度 / work_system | 955/965/996/997/007/大小周/单休/排班/加班 |
+| 周末类型 / weekend_type | 双休/单休/大小周/排班/轮休 |
+| 时间 / time | 时间或日期 |
+| 规则 / rule | 规则描述 |
+| 证据 / evidence | 证据 (多个用 \| 或 ; 分隔) |
+| 区域 / section | 955/965/996 |
+| 可信度 / confidence | A/B/C/D/E |
+
+解析器自动识别格式: 如果第一行是表头且含"公司"列 + 至少 3 个已知字段, 则按明细表解析; 否则按三段式解析。
+
 ## 1. 工作表 (Sheet) 要求
 
 - 至少一个工作表, 名称**任意** (项目通过内容识别, 不依赖 sheet 名)

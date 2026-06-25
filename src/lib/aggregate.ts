@@ -65,6 +65,7 @@ export function buildCitySummary(records: CompanyRecord[]): CitySummary[] {
       city,
       province: recs[0].province,
       total,
+      total_records: total,                  // V2.5
       count_955,
       count_965,
       count_996,
@@ -72,7 +73,17 @@ export function buildCitySummary(records: CompanyRecord[]): CitySummary[] {
       count_very_high,
       count_low,
       count_medium,
+      count_high_count: count_high,          // V2.5: 仅 high (不含 very_high)
       count_unknown,
+      // V2.5 增强字段
+      low_count: count_low,
+      medium_count: count_medium,
+      high_count: count_high,
+      very_high_count: count_very_high,
+      high_intensity_ratio: total > 0 ? Math.round(((count_high + count_very_high) / total) * 100) : 0,
+      avg_intensity_score: risk_score,
+      dominant_level: risk_dominant,
+      // 兼容字段
       risk_score,
       risk_dominant,
       lng: recs[0].lng!,
@@ -117,7 +128,12 @@ export function buildGeoJSON(summaries: CitySummary[]): GeoJSONCollection {
 }
 
 /**
- * 生成公司级 GeoJSON FeatureCollection (V2 公司点位地图导出)
+ * 生成公司级 GeoJSON FeatureCollection (V2.5 公司点位地图导出)
+ *
+ * V2.5 增强: properties 保留完整字段
+ *   company_name, city, province, district, address, geo_level, coord_system,
+ *   geo_source, geo_confidence, section, work_system, weekend_type, risk_level,
+ *   rule_text, confidence, lng, lat, event_date
  *
  * 每条有坐标的记录导出为一个 Point Feature:
  *   - geo_level = 'coordinate' → 公司精确坐标
@@ -143,12 +159,16 @@ export function buildCompanyGeoJSON(records: CompanyRecord[]): CompanyGeoJSONCol
         geo_level: r.geo_level,
         coord_system: r.coord_system,
         geo_source: r.geo_source,
+        geo_confidence: r.geo_confidence,
         section: r.section,
         work_system: r.work_system,
         weekend_type: r.weekend_type,
         risk_level: r.risk_level,
         rule_text: r.rule_text,
         confidence: r.confidence,
+        lng: r.lng,
+        lat: r.lat,
+        event_date: r.event_date,
       },
     }));
 

@@ -15,6 +15,7 @@ import { Legend } from '@/components/Legend';
 import { UploadExcel } from '@/components/UploadExcel';
 import { ExportButton } from '@/components/ExportButton';
 import { DownloadSampleButton } from '@/components/DownloadSampleButton';
+import { DataQualityPanel } from '@/components/DataQualityPanel';
 import { MobileLayout } from '@/components/MobileLayout';
 import { useMapStore } from '@/store/useMapStore';
 import { useIsMobile } from '@/hooks/use-media-query';
@@ -251,9 +252,14 @@ export default function Home() {
 
       {/* 主区域: 左筛选 + 中地图 + 右详情 */}
       <div className="flex-1 flex overflow-hidden">
-        {/* 左侧筛选栏 */}
-        <aside className="w-[260px] shrink-0 border-r border-slate-200 bg-white hidden md:block">
-          <FilterPanel />
+        {/* 左侧筛选栏 + V2.5 数据质量面板 */}
+        <aside className="w-[260px] shrink-0 border-r border-slate-200 bg-white hidden md:block flex flex-col overflow-hidden">
+          <div className="flex-1 overflow-hidden">
+            <FilterPanel />
+          </div>
+          <div className="p-3 border-t border-slate-100 shrink-0">
+            <DataQualityPanel />
+          </div>
         </aside>
 
         {/* 中间地图 */}

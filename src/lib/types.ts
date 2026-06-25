@@ -82,6 +82,7 @@ export interface CompanyRecord {
   lat: number | null;        // 纬度
   coord_system: CoordSystem; // 坐标系: wgs84 / gcj02 / bd09
   geo_source: GeoSource;     // 地理数据来源: manual / excel / api / geocoded
+  geo_confidence: Confidence; // V2.5: 地理精度可信度 (A=精确坐标 B=地址级 C=区县级 D=城市级 E=无法定位)
   section: SectionTitle;
   work_system: WorkSystem;
   weekend_type: WeekendType;
@@ -100,11 +101,12 @@ export interface CompanyRecord {
   updated_at: string;
 }
 
-/** 城市聚合统计 */
+/** 城市聚合统计 (V2.5 增强) */
 export interface CitySummary {
   city: string;
   province: string;
   total: number;
+  total_records: number;      // V2.5: 总记录数 (同 total, 语义更清晰)
   count_955: number;
   count_965: number;
   count_996: number;
@@ -112,9 +114,18 @@ export interface CitySummary {
   count_very_high: number;
   count_low: number;
   count_medium: number;
+  count_high_count: number;   // V2.5: high 级别数量 (不含 very_high)
   count_unknown: number;
-  risk_score: number; // 0-100
-  risk_dominant: RiskLevel;
+  // V2.5 增强字段
+  low_count: number;          // 低强度记录数 (同 count_low)
+  medium_count: number;       // 中强度记录数 (同 count_medium)
+  high_count: number;         // 高强度记录数 (仅 high, 不含 very_high)
+  very_high_count: number;    // 极高强度记录数 (同 count_very_high)
+  high_intensity_ratio: number; // 高强度占比 0-100 (high + very_high) / total
+  avg_intensity_score: number;  // 平均强度评分 0-100 (同 risk_score, 语义更清晰)
+  dominant_level: RiskLevel;    // V2.5: 主导强度等级 (同 risk_dominant, 语义更清晰)
+  risk_score: number; // 0-100 (保留, 兼容老代码)
+  risk_dominant: RiskLevel; // 保留, 兼容老代码
   lng: number;
   lat: number;
 }
@@ -139,7 +150,7 @@ export interface GeoJSONFeature {
   };
 }
 
-/** GeoJSON Feature (公司点位模式 V2) */
+/** GeoJSON Feature (公司点位模式 V2.5) */
 export interface CompanyGeoJSONFeature {
   type: 'Feature';
   geometry: {
@@ -156,12 +167,16 @@ export interface CompanyGeoJSONFeature {
     geo_level: GeoLevel;
     coord_system: CoordSystem;
     geo_source: GeoSource;
+    geo_confidence: Confidence;
     section: SectionTitle;
     work_system: WorkSystem;
     weekend_type: WeekendType;
     risk_level: RiskLevel;
     rule_text: string;
     confidence: Confidence;
+    lng: number | null;
+    lat: number | null;
+    event_date: string;
   };
 }
 

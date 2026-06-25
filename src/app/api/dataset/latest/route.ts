@@ -36,6 +36,7 @@ export async function GET() {
       .from('datasets')
       .select('id, version, file_name, record_count, city_count, records, city_summary, geojson, created_at')
       .eq('is_active', true)
+      .order('version', { ascending: false })
       .limit(1)
       .maybeSingle();
 
