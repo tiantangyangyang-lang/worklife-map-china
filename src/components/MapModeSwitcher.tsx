@@ -1,16 +1,17 @@
 'use client';
 
 // ============================================================
-// 地图模式切换器 (城市聚合 / 公司点位)
+// 地图模式切换器 (城市聚合 / 公司点位 / 2.5D 强度图)
 // ============================================================
 import { useMapStore } from '@/store/useMapStore';
 import type { MapMode } from '@/lib/types';
-import { Building2, MapPin } from 'lucide-react';
+import { Building2, MapPin, Mountain } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const MODES: { value: MapMode; label: string; icon: React.ReactNode; desc: string }[] = [
   { value: 'city', label: '城市聚合', icon: <MapPin className="w-3.5 h-3.5" />, desc: '每个城市一个点位, 大小=记录数' },
   { value: 'company', label: '公司点位', icon: <Building2 className="w-3.5 h-3.5" />, desc: '每个有坐标的公司一个点位' },
+  { value: '2.5d', label: '2.5D 强度图', icon: <Mountain className="w-3.5 h-3.5" />, desc: '3D 柱状图, 高度=记录数, 颜色=强度' },
 ];
 
 export function MapModeSwitcher() {
@@ -18,7 +19,7 @@ export function MapModeSwitcher() {
   const setMapMode = useMapStore(s => s.setMapMode);
 
   return (
-    <div className="absolute top-4 right-4 z-20 bg-white/95 backdrop-blur-sm rounded-lg shadow-md border border-slate-200 p-1 flex items-center gap-0.5">
+    <div className="absolute top-4 right-4 z-20 bg-white/95 backdrop-blur-sm rounded-lg shadow-md border border-slate-200 p-1 flex items-center gap-0.5 flex-wrap">
       {MODES.map(mode => {
         const active = mapMode === mode.value;
         return (

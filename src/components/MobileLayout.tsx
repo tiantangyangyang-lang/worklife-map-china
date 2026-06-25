@@ -34,6 +34,7 @@ import { CityDetail } from './CityDetail';
 import { StatsPanel } from './StatsPanel';
 import { MapView } from './MapView';
 import { CompanyMapView } from './CompanyMapView';
+import { Deck25DMapView } from './Deck25DMapView';
 import { MapModeSwitcher } from './MapModeSwitcher';
 import { Legend } from './Legend';
 import { SearchBar } from './SearchBar';
@@ -222,9 +223,15 @@ export function MobileLayout() {
 
       {/* 地图主区域 (剩余高度) */}
       <div className="flex-1 relative overflow-hidden min-h-0">
-        <Legend />
+        {mapMode !== '2.5d' && <Legend />}
         <MapModeSwitcher />
-        {mapMode === 'company' ? <CompanyMapView /> : <MapView />}
+        {mapMode === '2.5d' ? (
+          <Deck25DMapView />
+        ) : mapMode === 'company' ? (
+          <CompanyMapView />
+        ) : (
+          <MapView />
+        )}
       </div>
 
       {/* 城市详情底部抽屉 (选中城市时弹出) */}

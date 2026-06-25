@@ -2,7 +2,7 @@
 
 > 🗺️ 一个开源的中国公司作息数据可视化工具 — 上传 Excel, 自动生成城市级公司作息地图。
 
-![version](https://img.shields.io/badge/version-V2.5-emerald)
+![version](https://img.shields.io/badge/version-V3.0-emerald)
 ![license](https://img.shields.io/badge/license-MIT-blue)
 ![next](https://img.shields.io/badge/Next.js-16-black)
 ![typescript](https://img.shields.io/badge/TypeScript-5-blue)
@@ -304,11 +304,27 @@ npm run build:map
 | --- | --- | --- |
 | **V1** | 城市级作息地图 (Excel 导入 + 城市聚合 + 搜索筛选 + 多格式导出) | ✅ 已完成 |
 | **V2** | 公共数据发布 + 公司点位字段 (Supabase + 管理员发布 + 经纬度点位 + 双模式切换) | ✅ 已完成 |
-| **V2.5** | 地图信息增强 (geo_confidence + 明细表格式 + 同坐标聚合 + 数据质量面板 + city_summary 增强) | ✅ 当前版本 |
-| **V3** | 3D / 2.5D 可视化 (3D 地图 + 城市工作强度热力图 + 科技园区密度) | 🔜 规划中 |
+| **V2.5** | 地图信息增强 (geo_confidence + 明细表格式 + 同坐标聚合 + 数据质量面板 + city_summary 增强) | ✅ 已完成 |
+| **V3** | 2.5D 可视化 (MapLibre + deck.gl ColumnLayer 城市工作强度柱状图 + 高度倍率/标签控制) | ✅ 当前版本 |
 | **V4** | 用户投稿与审核 (投稿 → 审核 → 发布后台 + 证据上传 + 可信度评分细化) | 🔜 规划中 |
 
 详见 [`docs/ROADMAP.md`](docs/ROADMAP.md)
+
+## 🏔️ V3 2.5D 强度图模式
+
+V3 新增第三种地图模式: **2.5D 强度图**, 使用 MapLibre + deck.gl 实现:
+
+- **底图**: MapLibre GL (OpenStreetMap raster tiles)
+- **柱状图**: deck.gl ColumnLayer, 每个城市一根 3D 柱子
+- **柱子高度**: `Math.sqrt(total) * 8000 * 倍率` (sqrt 平滑避免上海/北京太夸张)
+- **柱子颜色**: 按主导强度 (low=绿/medium=黄/high=橙红/very_high=深红/unknown=灰)
+- **交互**: 悬浮显示 tooltip (城市/记录数/955/965/996/高强度占比/主导强度), 点击选中城市
+- **控制面板**: 高度指标切换 (总记录数/高强度数量/高强度比例) + 高度倍率 slider + 城市标签开关
+- **初始视角**: lng=104, lat=35, zoom=3.2, pitch=50, bearing=-20
+
+切换方式: 地图右上角"城市聚合 / 公司点位 / 2.5D 强度图"按钮组。
+
+> ⚠️ 2.5D 模式需要访问 OpenStreetMap 瓦片服务器。网络受限时会显示加载失败提示, 可切换回城市聚合模式。
 
 ## 🤝 贡献
 

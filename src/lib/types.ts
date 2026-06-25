@@ -44,7 +44,7 @@ export type Confidence = 'A' | 'B' | 'C' | 'D' | 'E';
 export type SectionTitle = '955' | '965' | '996';
 
 /** 地图模式 */
-export type MapMode = 'city' | 'company';
+export type MapMode = 'city' | 'company' | '2.5d';
 
 /** 分类依据 (issue #8: 公司详情页展示) */
 export interface ClassificationBasis {

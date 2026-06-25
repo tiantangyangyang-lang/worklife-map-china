@@ -6,6 +6,7 @@
 import { useEffect } from 'react';
 import { MapView } from '@/components/MapView';
 import { CompanyMapView } from '@/components/CompanyMapView';
+import { Deck25DMapView } from '@/components/Deck25DMapView';
 import { MapModeSwitcher } from '@/components/MapModeSwitcher';
 import { FilterPanel } from '@/components/FilterPanel';
 import { SearchBar } from '@/components/SearchBar';
@@ -264,9 +265,15 @@ export default function Home() {
 
         {/* 中间地图 */}
         <section className="flex-1 relative overflow-hidden">
-          <Legend />
+          {mapMode !== '2.5d' && <Legend />}
           <MapModeSwitcher />
-          {mapMode === 'company' ? <CompanyMapView /> : <MapView />}
+          {mapMode === '2.5d' ? (
+            <Deck25DMapView />
+          ) : mapMode === 'company' ? (
+            <CompanyMapView />
+          ) : (
+            <MapView />
+          )}
         </section>
 
         {/* 右侧详情 */}
