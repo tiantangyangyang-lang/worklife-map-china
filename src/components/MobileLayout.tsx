@@ -58,6 +58,28 @@ export function MobileLayout() {
   const selectCompany = useMapStore(s => s.selectCompany);
   const filter = useMapStore(s => s.filter);
   const mapMode = useMapStore(s => s.mapMode);
+  // V2.1: 数据源信息
+  const dataSource = useMapStore(s => s.dataSource);
+  const datasetVersion = useMapStore(s => s.datasetVersion);
+  const datasetCreatedAt = useMapStore(s => s.datasetCreatedAt);
+  const dataMode = useMapStore(s => s.dataMode);
+  const globalStats = useMapStore(s => s.globalStats);
+  const citySummaries = useMapStore(s => s.citySummaries);
+
+  /** 格式化 ISO 时间为 "MM-DD HH:mm" */
+  const formatDateTime = (iso: string): string => {
+    try {
+      const d = new Date(iso);
+      if (isNaN(d.getTime())) return '';
+      const M = String(d.getMonth() + 1).padStart(2, '0');
+      const D = String(d.getDate()).padStart(2, '0');
+      const h = String(d.getHours()).padStart(2, '0');
+      const m = String(d.getMinutes()).padStart(2, '0');
+      return `${M}-${D} ${h}:${m}`;
+    } catch {
+      return '';
+    }
+  };
 
   // 导出逻辑 (共享 hook)
   const { loading: exportLoading, doExport, allRecords, filteredRecords } = useExportRecords();
@@ -163,6 +185,33 @@ export function MobileLayout() {
           </DropdownMenuContent>
         </DropdownMenu>
       </header>
+
+      {/* V2.1: 顶部数据源信息条 (移动端紧凑版) */}
+      {dataSource && (
+        <div className="bg-slate-50 border-b border-slate-200 px-3 py-1 flex items-center gap-1.5 text-[10px] text-slate-500 overflow-x-auto shrink-0">
+          {datasetVersion !== null && (
+            <span className="font-semibold text-emerald-600 shrink-0">v{datasetVersion}</span>
+          )}
+          <span className="truncate max-w-[120px]" title={dataSource}>{dataSource}</span>
+          {globalStats && (
+            <>
+              <span className="text-slate-300 shrink-0">·</span>
+              <span className="shrink-0">{globalStats.totalRecords} 条</span>
+              <span className="text-slate-300 shrink-0">·</span>
+              <span className="shrink-0">{citySummaries.length} 城市</span>
+            </>
+          )}
+          {datasetCreatedAt && (
+            <>
+              <span className="text-slate-300 shrink-0">·</span>
+              <span className="shrink-0 text-slate-400">{formatDateTime(datasetCreatedAt)}</span>
+            </>
+          )}
+          {dataMode === 'fallback' && (
+            <span className="px-1 py-0.5 bg-amber-100 text-amber-700 rounded shrink-0">预置</span>
+          )}
+        </div>
+      )}
 
       {/* 横向滚动统计卡片 */}
       <div className="bg-gradient-to-r from-slate-50 via-emerald-50/40 to-slate-50 border-b border-slate-200 overflow-x-auto shrink-0">

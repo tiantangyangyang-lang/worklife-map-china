@@ -86,19 +86,20 @@ export function CompanyMapView() {
     setZoom(z => Math.max(0.6, Math.min(6, z + delta)));
   };
 
-  // 投影所有有坐标的公司记录
+  // V2.1 修复: 公司点位模式只显示 geo_level === 'coordinate' 且 lng/lat 不为空的记录
+  // 不要把城市中心 fallback 记录 (geo_level === 'city') 当成公司真实点位显示
   const projectedPoints = useMemo(() => {
     return filteredRecords
-      .filter(r => r.lng !== null && r.lat !== null)
+      .filter(r => r.geo_level === 'coordinate' && r.lng !== null && r.lat !== null)
       .map(r => {
         const [x, y] = project(r.lng as number, r.lat as number);
         return { record: r, x, y };
       });
   }, [filteredRecords]);
 
-  const pointsWithCoordsCount = projectedPoints.length;
+  const realCompanyPointCount = projectedPoints.length;
   const totalRecords = filteredRecords.length;
-  const noCoordCount = totalRecords - pointsWithCoordsCount;
+  const noCoordCount = totalRecords - realCompanyPointCount;
 
   if (loadError) {
     return (
@@ -313,19 +314,26 @@ export function CompanyMapView() {
         >⊙</button>
       </div>
 
-      {/* 统计条 */}
-      <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-sm rounded-lg shadow-md border border-slate-200 px-3 py-2 z-20 text-xs">
-        <div className="font-semibold text-slate-700 mb-0.5">公司点位模式</div>
-        <div className="text-slate-500">
-          显示 <span className="font-bold text-emerald-600">{pointsWithCoordsCount}</span> / {totalRecords} 条
-          {noCoordCount > 0 && (
-            <span className="text-amber-600 ml-1">({noCoordCount} 条无坐标)</span>
-          )}
+      {/* V2.1 统计条: 真实公司点位 / 无精确坐标记录 */}
+      <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-sm rounded-lg shadow-md border border-slate-200 px-3 py-2 z-20 text-xs space-y-0.5">
+        <div className="font-semibold text-slate-700">公司点位模式</div>
+        <div className="text-slate-600">
+          真实公司点位：<span className="font-bold text-emerald-600">{realCompanyPointCount}</span> 条
         </div>
+        {noCoordCount > 0 && (
+          <div className="text-amber-600">
+            无精确坐标记录：<span className="font-bold">{noCoordCount}</span> 条
+          </div>
+        )}
+        {noCoordCount > 0 && (
+          <div className="text-[10px] text-slate-400 leading-snug pt-0.5 border-t border-slate-100 mt-0.5">
+            无精确坐标记录请切换到城市聚合模式查看
+          </div>
+        )}
       </div>
 
-      {/* 空状态: 没有公司坐标 */}
-      {pointsWithCoordsCount === 0 && totalRecords > 0 && (
+      {/* 空状态: 没有真实公司坐标 */}
+      {realCompanyPointCount === 0 && totalRecords > 0 && (
         <div className="absolute inset-0 flex items-center justify-center bg-white/70 backdrop-blur-sm z-30 p-4">
           <div className="flex flex-col items-center text-center max-w-sm bg-white rounded-lg shadow-lg border border-slate-200 p-5">
             <div className="w-14 h-14 rounded-full bg-amber-50 border border-amber-100 flex items-center justify-center mb-3">
@@ -334,7 +342,7 @@ export function CompanyMapView() {
             <div className="text-sm font-semibold text-slate-700 mb-1">当前数据没有公司精确坐标</div>
             <div className="text-xs text-slate-500 leading-relaxed">
               公司点位模式需要每条记录包含经纬度 (Excel 第 11/12 列)。<br />
-              请切换到 <strong>城市聚合模式</strong> 查看城市级数据, 或上传含经纬度的 Excel。
+              无精确坐标记录请切换到 <strong>城市聚合模式</strong> 查看。
             </div>
           </div>
         </div>

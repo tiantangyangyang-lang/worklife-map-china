@@ -75,6 +75,7 @@ export function useDatasetVersionPoller() {
             file_name: full.file_name,
             records: full.records,
             city_summary: full.city_summary,
+            created_at: full.created_at,
           },
           { silent: true },
         );

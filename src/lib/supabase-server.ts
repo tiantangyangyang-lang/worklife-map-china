@@ -7,19 +7,33 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js';
  * 服务端 Supabase 客户端 (使用 service_role key, 绕过 RLS)
  *
  * 环境变量:
- *   SUPABASE_URL          - 项目 URL
+ *   SUPABASE_URL          - 项目 URL (必填)
  *   SUPABASE_SERVICE_KEY  - service_role key (仅服务端, 不暴露给浏览器)
+ *     兼容以下任一变量名 (三选一即可):
+ *       - SUPABASE_SERVICE_KEY
+ *       - SUPABASE_SERVICE_ROLE_KEY
+ *       - SUPABASE_SECRET_KEY
  *   ADMIN_UPLOAD_PASSWORD - 管理员上传密码
  *
  * 如果环境变量未配置, 返回 null, API 会返回 503 提示未配置。
  */
 let _client: SupabaseClient | null | undefined = null;
 
+/** 读取 service_role key, 兼容三种环境变量名 (三选一) */
+function getServiceRoleKey(): string | null {
+  const key =
+    process.env.SUPABASE_SERVICE_KEY ||
+    process.env.SUPABASE_SERVICE_ROLE_KEY ||
+    process.env.SUPABASE_SECRET_KEY;
+  if (!key || !key.trim()) return null;
+  return key.trim();
+}
+
 export function getSupabaseServer(): SupabaseClient | null {
   if (_client !== undefined) return _client;
 
   const url = process.env.SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_KEY;
+  const key = getServiceRoleKey();
 
   if (!url || !key) {
     _client = null;

@@ -31,6 +31,21 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 
+/** V2.1: 格式化 ISO 时间为 "MM-DD HH:mm" 紧凑显示 (用于顶部数据源区域) */
+function formatDateTime(iso: string): string {
+  try {
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return '';
+    const M = String(d.getMonth() + 1).padStart(2, '0');
+    const D = String(d.getDate()).padStart(2, '0');
+    const h = String(d.getHours()).padStart(2, '0');
+    const m = String(d.getMinutes()).padStart(2, '0');
+    return `${M}-${D} ${h}:${m}`;
+  } catch {
+    return '';
+  }
+}
+
 export default function Home() {
   const isMobile = useIsMobile();
   const loading = useMapStore(s => s.loading);
@@ -40,6 +55,11 @@ export default function Home() {
   const setError = useMapStore(s => s.setError);
   const setLoading = useMapStore(s => s.setLoading);
   const dataSource = useMapStore(s => s.dataSource);
+  const datasetVersion = useMapStore(s => s.datasetVersion);
+  const datasetCreatedAt = useMapStore(s => s.datasetCreatedAt);
+  const dataMode = useMapStore(s => s.dataMode);
+  const globalStats = useMapStore(s => s.globalStats);
+  const citySummaries = useMapStore(s => s.citySummaries);
   const mapMode = useMapStore(s => s.mapMode);
 
   // 启动公共数据版本轮询 (仅在 API 模式下生效, 内部自管理)
@@ -63,6 +83,7 @@ export default function Home() {
                 file_name: data.file_name,
                 records: data.records,
                 city_summary: data.city_summary,
+                created_at: data.created_at,
               });
               return;
             }
@@ -149,10 +170,33 @@ export default function Home() {
         </div>
 
         <div className="flex items-center gap-2">
+          {/* V2.1: 顶部数据源信息 (版本/文件名/记录数/城市数/更新时间) */}
           {dataSource && (
-            <span className="text-xs text-slate-400 hidden md:inline-block max-w-[200px] truncate" title={dataSource}>
-              数据: {dataSource}
-            </span>
+            <div className="hidden lg:flex items-center gap-2 text-[11px] text-slate-500 bg-slate-50 border border-slate-200 rounded-md px-2 py-1 max-w-[420px]">
+              {datasetVersion !== null && (
+                <span className="font-semibold text-emerald-600 shrink-0">v{datasetVersion}</span>
+              )}
+              <span className="truncate" title={dataSource}>, {dataSource}</span>
+              {globalStats && (
+                <>
+                  <span className="text-slate-300">·</span>
+                  <span className="shrink-0">{globalStats.totalRecords} 条</span>
+                  <span className="text-slate-300">·</span>
+                  <span className="shrink-0">{citySummaries.length} 城市</span>
+                </>
+              )}
+              {datasetCreatedAt && (
+                <>
+                  <span className="text-slate-300">·</span>
+                  <span className="shrink-0 text-slate-400" title={datasetCreatedAt}>
+                    {formatDateTime(datasetCreatedAt)}
+                  </span>
+                </>
+              )}
+              {dataMode === 'fallback' && (
+                <span className="ml-1 px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded text-[10px] shrink-0">预置</span>
+              )}
+            </div>
           )}
           <UploadExcel />
           <DownloadSampleButton

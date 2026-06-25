@@ -20,6 +20,8 @@ interface MapStore {
   dataSource: string; // 数据来源名称
   /** 当前数据集版本号 (来自 API /api/dataset/latest), 用于轮询比较; null 表示未从 API 加载 */
   datasetVersion: number | null;
+  /** 数据集更新时间 (ISO 字符串, 来自 API created_at; fallback 模式为空) */
+  datasetCreatedAt: string | null;
   /** 数据来源模式: 'api' = 公共数据库 / 'fallback' = public/data 预置 */
   dataMode: 'api' | 'fallback' | 'unknown';
 
@@ -48,6 +50,7 @@ interface MapStore {
       file_name: string;
       records: CompanyRecord[];
       city_summary?: CitySummary[];
+      created_at?: string;
     },
     options?: { silent?: boolean }
   ) => void;
@@ -111,6 +114,7 @@ export const useMapStore = create<MapStore>((set, get) => ({
   error: null,
   dataSource: '',
   datasetVersion: null,
+  datasetCreatedAt: null,
   dataMode: 'unknown',
   selectedCity: null,
   selectedCompany: null,
@@ -158,6 +162,7 @@ export const useMapStore = create<MapStore>((set, get) => ({
       error: null,
       dataSource: payload.file_name,
       datasetVersion: payload.version,
+      datasetCreatedAt: payload.created_at ?? null,
       dataMode: 'api',
       // 静默更新 (轮询触发的) 不重置选中状态, 避免打断用户
       ...(silent ? {} : { selectedCity: null, selectedCompany: null }),

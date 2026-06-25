@@ -156,9 +156,10 @@ export function UploadExcel({ open: controlledOpen, onOpenChange, hideTrigger }:
       // ===== 保存成功, 立即更新本地地图 =====
       resetFilter();
       setRecords(records, selectedFile.name);
-      // 同步 store 的 datasetVersion / dataMode (这样轮询器知道当前版本)
+      // 同步 store 的 datasetVersion / dataMode / createdAt (这样轮询器知道当前版本)
       useMapStore.setState({
         datasetVersion: result.version,
+        datasetCreatedAt: result.createdAt ?? new Date().toISOString(),
         dataMode: 'api',
       });
 
