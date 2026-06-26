@@ -175,12 +175,13 @@ export function Deck25DMapView() {
         // 避免 TextLayer/其它图层 shader 编译失败时错误冒泡到 MapLibre
         interleaved: false,
         layers: [],
+        // V3.1: onError 拦截 deck.gl 内部错误 (含 shader 编译失败),
+        // 不让错误源码显示到页面上, 只显示友好提示
+        onError: (err: Error) => {
+          console.error('[Deck25DMapView] deck.gl layer error:', err);
+          setLayerError('2.5D 图层渲染失败, 请切换到城市聚合模式或刷新页面');
+        },
       });
-      // V3.1: onError 拦截 deck.gl 内部错误, 不让 shader 源码显示到页面
-      (overlay as any).onError = (err: Error) => {
-        console.error('[Deck25DMapView] deck.gl overlay error:', err);
-        setLayerError('2.5D 图层渲染失败, 请切换到城市聚合模式或刷新页面');
-      };
       mapRef.current.addControl(overlay as any, 'top-left');
       overlayRef.current = overlay;
     } catch (e) {
