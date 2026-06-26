@@ -1,6 +1,9 @@
 @import "tailwindcss";
 @plugin "tailwindcss-animate";
 
+/* V3: MapLibre GL 全局样式 (2.5D 强度图模式需要) */
+@import "maplibre-gl/dist/maplibre-gl.css";
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
