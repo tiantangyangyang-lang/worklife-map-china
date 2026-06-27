@@ -4,6 +4,7 @@
 import { findCityCenter } from './city-centers';
 import type { SectionTitle, CompanyRecord, GeoLevel, CoordSystem, GeoSource, Confidence } from './types';
 import { classifyWorkSystem, classifyWeekendType, classifyRiskLevel, classifyConfidence, excelDateToString, buildClassificationBasis } from './classify';
+import { sanitizeUrl } from './url';
 
 /** 非城市关键词 (在拆分时会被过滤) */
 const NON_CITY_KEYWORDS = new Set(['remote', 'Remote', 'REMOTE', '远程', '不限', '全国', '多地', 'Linkedin', 'National']);
@@ -155,6 +156,7 @@ export function buildCompanyRecord(
   section: SectionTitle,
   sourceName: string,
   sheetName: string,
+  linksRow?: string[],
 ): CompanyRecord[] {
   const cityRaw = String(row[0] || '').trim();
   const companyRaw = String(row[1] || '').trim();
@@ -193,8 +195,19 @@ export function buildCompanyRecord(
   const { name: companyName, raw: companyNameRaw } = cleanCompanyName(actualCompanyRaw);
   if (!companyName) return [];
 
-  const evidenceList = [evidence1, evidence2, evidence3, evidence4].filter(e => e);
+  // 证据 + 对齐的证据链接 (列 4-7 的单元格超链接). 保留有文本或有链接的项,
+  // 文本为空但有链接时用链接本身作为显示文本, 避免链接丢失。
+  const evidenceSlots = [
+    { text: evidence1, url: sanitizeUrl(linksRow?.[4]) },
+    { text: evidence2, url: sanitizeUrl(linksRow?.[5]) },
+    { text: evidence3, url: sanitizeUrl(linksRow?.[6]) },
+    { text: evidence4, url: sanitizeUrl(linksRow?.[7]) },
+  ].filter(s => s.text || s.url);
+  const evidenceList = evidenceSlots.map(s => s.text || s.url);
+  const evidenceLinks = evidenceSlots.map(s => s.url);
   const evidenceText = evidenceList.join(' | ');
+  // 公司官网 (公司列 = 列 1 的超链接)
+  const companyUrl = sanitizeUrl(linksRow?.[1]);
 
   const fullText = `${actualCityRaw} ${companyName} ${timeRaw} ${ruleText} ${evidenceText}`;
   const workSystem = classifyWorkSystem(fullText, section);
@@ -258,6 +271,8 @@ export function buildCompanyRecord(
       rule_text: ruleText,
       evidence_text: evidenceText,
       evidence_list: evidenceList,
+      company_url: companyUrl || undefined,
+      evidence_links: evidenceLinks.some(u => u) ? evidenceLinks : undefined,
       source_type: 'uploaded_excel',
       source_name: sourceName,
       source_sheet: sheetName,
@@ -296,6 +311,8 @@ export function buildCompanyRecord(
       rule_text: ruleText,
       evidence_text: evidenceText,
       evidence_list: evidenceList,
+      company_url: companyUrl || undefined,
+      evidence_links: evidenceLinks.some(u => u) ? evidenceLinks : undefined,
       source_type: 'uploaded_excel',
       source_name: sourceName,
       source_sheet: sheetName,
@@ -338,6 +355,8 @@ export function buildCompanyRecord(
       rule_text: ruleText,
       evidence_text: evidenceText,
       evidence_list: evidenceList,
+      company_url: companyUrl || undefined,
+      evidence_links: evidenceLinks.some(u => u) ? evidenceLinks : undefined,
       source_type: 'uploaded_excel',
       source_name: sourceName,
       source_sheet: sheetName,
@@ -407,6 +426,15 @@ function buildHeaderMap(header: any[]): Record<string, number> {
       section: ['区域', 'section', '数据区域'],
       risk_level: ['强度', '强度等级', 'risk_level', 'intensity'],
       confidence: ['可信度', 'confidence'],
+      // V4: 招聘站 / 多来源扩展列
+      department: ['部门', 'department', 'dept'],
+      job_title: ['岗位', '职位', '岗位名', '职位名称', 'job_title', 'jobtitle', 'position', 'title'],
+      work_begin: ['上班时间', '上班', 'work_begin', 'workbegin', 'begin', 'start_time'],
+      work_end: ['下班时间', '下班', 'work_end', 'workend', 'end', 'end_time'],
+      workdays: ['一周工作天数', '工作天数', '每周工作天数', 'workdays', 'work_days', 'days_per_week'],
+      source_platform: ['来源平台', '平台', 'source_platform', 'platform'],
+      source_url: ['来源链接', '来源url', '源链接', 'source_url', 'sourceurl', '链接'],
+      collected_at: ['采集时间', '收集时间', 'collected_at', 'collectedat', 'collect_time'],
     };
     for (const [key, aliasList] of Object.entries(aliases)) {
       if (aliasList.includes(name) && !(key in map)) {
@@ -427,6 +455,7 @@ function parseDetailTable(
   rows: any[][],
   sourceName: string,
   sheetName: string,
+  links?: string[][],
 ): CompanyRecord[] {
   if (rows.length < 2) return [];
   const headerMap = buildHeaderMap(rows[0]);
@@ -464,6 +493,14 @@ function parseDetailTable(
     const ruleText = get('rule');
     const evidenceRaw = get('evidence');
     const sectionRaw = get('section');
+    // V4: 招聘站 / 多来源扩展列
+    const department = get('department');
+    const jobTitle = get('job_title');
+    const workBegin = get('work_begin');
+    const workEnd = get('work_end');
+    const workdays = get('workdays');
+    const sourcePlatform = get('source_platform');
+    const collectedAt = get('collected_at');
 
     // 经纬度校验
     const hasValidCoord = lng !== null && lat !== null && isValidChinaCoordinate(lng, lat);
@@ -494,6 +531,12 @@ function parseDetailTable(
     const riskLevel = classifyRiskLevel(workSystem, `${ruleText} ${evidenceRaw}`);
     const evidenceList = evidenceRaw ? evidenceRaw.split(/[|｜;；]/).map(s => s.trim()).filter(Boolean) : [];
     const evidenceText = evidenceList.join(' | ');
+    // 链接保留: 公司列 / 证据列的单元格超链接 (明细表证据为单格, 链接对齐到首条证据)
+    const companyUrl = sanitizeUrl(links?.[i]?.[headerMap['company']]);
+    const evidenceCellUrl = sanitizeUrl(links?.[i]?.[headerMap['evidence']]);
+    const evidenceLinks = evidenceList.map((_, idx) => (idx === 0 ? evidenceCellUrl : ''));
+    // 来源页 URL: 优先文本列值, 回退到该列单元格超链接
+    const sourceUrl = sanitizeUrl(get('source_url')) || sanitizeUrl(links?.[i]?.[headerMap['source_url']]);
     const confidence = classifyConfidence(section, ruleText, evidenceList);
     const eventDate = excelDateToString(timeRaw);
     const classificationBasis = buildClassificationBasis(fullText, section, workSystem, weekendType, riskLevel, `${ruleText} ${evidenceText}`);
@@ -536,6 +579,17 @@ function parseDetailTable(
       rule_text: ruleText,
       evidence_text: evidenceText,
       evidence_list: evidenceList,
+      company_url: companyUrl || undefined,
+      evidence_links: evidenceLinks.some(u => u) ? evidenceLinks : undefined,
+      // V4: 招聘站 / 多来源扩展字段 (空值存 undefined, 不污染老数据)
+      department: department || undefined,
+      job_title: jobTitle || undefined,
+      work_begin: workBegin || undefined,
+      work_end: workEnd || undefined,
+      workdays: workdays || undefined,
+      source_platform: sourcePlatform || undefined,
+      source_url: sourceUrl || undefined,
+      collected_at: collectedAt || undefined,
       source_type: 'uploaded_excel',
       source_name: sourceName,
       source_sheet: sheetName,
@@ -559,10 +613,11 @@ export function parseSheetRows(
   rows: any[][],
   sourceName: string,
   sheetName: string,
+  links?: string[][],
 ): CompanyRecord[] {
   // V2.5: 优先检测明细表格式
   if (isDetailTableFormat(rows)) {
-    return parseDetailTable(rows, sourceName, sheetName);
+    return parseDetailTable(rows, sourceName, sheetName, links);
   }
 
   // 三段式格式 (原有逻辑)
@@ -592,7 +647,7 @@ export function parseSheetRows(
     if (!row.some(c => String(c || '').trim())) return;
     if (!currentSection) return;
 
-    const newRecords = buildCompanyRecord(row, i + 1, currentSection, sourceName, sheetName);
+    const newRecords = buildCompanyRecord(row, i + 1, currentSection, sourceName, sheetName, links?.[i]);
     records.push(...newRecords);
   });
 

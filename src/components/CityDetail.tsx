@@ -11,10 +11,10 @@ import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 import { WORK_SYSTEM_LABELS, RISK_COLORS, CONFIDENCE_LABELS } from '@/lib/types';
 import type { CompanyRecord, CitySummary, ClassificationBasis } from '@/lib/types';
-import { ArrowLeft, MapPin, Building2, FileText, ExternalLink, Quote, Calendar, Hash, ShieldCheck, AlertTriangle, Activity, Sparkles, RotateCcw } from 'lucide-react';
+import { ArrowLeft, MapPin, Building2, FileText, ExternalLink, Quote, Calendar, Hash, ShieldCheck, AlertTriangle, Activity, Sparkles, RotateCcw, Loader2, Briefcase, Clock } from 'lucide-react';
 
 /** 城市统计 + 公司列表 (默认视图) */
-function CityListView({ city, records, onBack }: { city: CitySummary; records: CompanyRecord[]; onBack: () => void }) {
+function CityListView({ city, records, onBack, recordsLoaded }: { city: CitySummary; records: CompanyRecord[]; onBack: () => void; recordsLoaded: boolean }) {
   // 按强度等级排序: very_high > high > medium > unknown > low
   const riskOrder = { very_high: 0, high: 1, medium: 2, unknown: 3, low: 4 };
   const resetFilter = useMapStore(s => s.resetFilter);
@@ -66,7 +66,13 @@ function CityListView({ city, records, onBack }: { city: CitySummary; records: C
       {/* 公司列表 */}
       <ScrollArea className="flex-1">
         <div className="p-3 space-y-1.5">
-          {sortedRecords.length === 0 && (
+          {sortedRecords.length === 0 && !recordsLoaded && (
+            <div className="flex flex-col items-center text-center py-8 px-3 text-slate-400">
+              <Loader2 className="w-5 h-5 animate-spin mb-2 text-emerald-500" />
+              <div className="text-xs">公司明细加载中…</div>
+            </div>
+          )}
+          {sortedRecords.length === 0 && recordsLoaded && (
             <div className="flex flex-col items-center text-center py-8 px-3">
               <div className="w-12 h-12 rounded-full bg-amber-50 border border-amber-100 flex items-center justify-center mb-2.5">
                 <Sparkles className="w-6 h-6 text-amber-400" />
@@ -142,6 +148,16 @@ function CompanyDetailView({ record, onBack }: { record: CompanyRecord; onBack: 
           </div>
           <div className="flex-1 min-w-0">
             <h2 className="text-xl font-bold text-slate-800 break-words">{record.company_name}</h2>
+            {record.company_url && (
+              <a
+                href={record.company_url}
+                target="_blank"
+                rel="noopener noreferrer nofollow"
+                className="text-xs text-emerald-600 hover:text-emerald-700 inline-flex items-center gap-1 mt-0.5 break-all"
+              >
+                <ExternalLink className="w-3 h-3 shrink-0" />公司官网
+              </a>
+            )}
             <div className="text-sm text-slate-500 flex items-center gap-1 mt-0.5">
               <MapPin className="w-3 h-3" />
               {record.city || '未知城市'}
@@ -193,6 +209,50 @@ function CompanyDetailView({ record, onBack }: { record: CompanyRecord; onBack: 
 
       <ScrollArea className="flex-1">
         <div className="p-4 space-y-4">
+          {/* V4: 招聘站 / 多来源扩展信息 (岗位 / 作息时间 / 来源页) */}
+          {(record.job_title || record.department || record.work_begin || record.work_end || record.workdays || record.source_platform || record.source_url) && (
+            <div className="space-y-2">
+              {(record.job_title || record.department) && (
+                <div className="flex items-center gap-1.5 text-sm text-slate-700">
+                  <Briefcase className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                  <span className="font-medium">{record.job_title || '岗位未注明'}</span>
+                  {record.department && <span className="text-slate-400">· {record.department}</span>}
+                </div>
+              )}
+              {(record.work_begin || record.work_end || record.workdays) && (
+                <div className="flex flex-wrap items-center gap-2 bg-slate-50 border border-slate-100 rounded-md p-2 text-xs text-slate-600">
+                  <Clock className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                  {(record.work_begin || record.work_end) && (
+                    <span className="font-medium">{record.work_begin || '?'} – {record.work_end || '?'}</span>
+                  )}
+                  {record.workdays && (
+                    <>
+                      {(record.work_begin || record.work_end) && <span className="text-slate-300">·</span>}
+                      <span>每周 {record.workdays} 天</span>
+                    </>
+                  )}
+                </div>
+              )}
+              {(record.source_platform || record.source_url) && (
+                <div className="flex items-center gap-1.5 text-xs">
+                  {record.source_platform && (
+                    <Badge variant="outline" className="text-[10px] h-4 px-1.5 font-normal">{record.source_platform}</Badge>
+                  )}
+                  {record.source_url && (
+                    <a
+                      href={record.source_url}
+                      target="_blank"
+                      rel="noopener noreferrer nofollow"
+                      className="text-emerald-700 hover:text-emerald-800 underline underline-offset-2 inline-flex items-center gap-1 break-all"
+                    >
+                      查看来源页 <ExternalLink className="w-3 h-3 shrink-0" />
+                    </a>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
           {/* 分类依据 (issue #8) */}
           {record.classification_basis && (
             <ClassificationBasisView basis={record.classification_basis} />
@@ -218,15 +278,30 @@ function CompanyDetailView({ record, onBack }: { record: CompanyRecord; onBack: 
                 <ExternalLink className="w-3.5 h-3.5" />证据描述
               </div>
               <div className="space-y-1.5">
-                {record.evidence_list.map((ev, i) => (
-                  <div key={i} className="bg-amber-50 border border-amber-100 rounded-md p-2 text-xs text-amber-900 flex items-start gap-1.5">
-                    <span className="text-amber-400 font-bold shrink-0">{i + 1}.</span>
-                    <span>{ev}</span>
-                  </div>
-                ))}
+                {record.evidence_list.map((ev, i) => {
+                  const url = record.evidence_links?.[i];
+                  return (
+                    <div key={i} className="bg-amber-50 border border-amber-100 rounded-md p-2 text-xs text-amber-900 flex items-start gap-1.5">
+                      <span className="text-amber-400 font-bold shrink-0">{i + 1}.</span>
+                      {url ? (
+                        <a
+                          href={url}
+                          target="_blank"
+                          rel="noopener noreferrer nofollow"
+                          className="text-emerald-700 hover:text-emerald-800 underline underline-offset-2 break-all inline-flex items-start gap-1"
+                        >
+                          <span>{ev}</span>
+                          <ExternalLink className="w-3 h-3 mt-0.5 shrink-0" />
+                        </a>
+                      ) : (
+                        <span className="break-all">{ev}</span>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
               <div className="text-[11px] text-slate-400 mt-1.5">
-                注: 证据描述来源于上传数据原文, 多为内部截图、考勤记录、知乎帖子等说明, 不一定包含可访问 URL。
+                注: 证据描述来源于上传数据原文, 多为内部截图、考勤记录、知乎帖子等说明。带链接的证据可点击跳转到原始来源。
               </div>
             </div>
           )}
@@ -259,6 +334,18 @@ function CompanyDetailView({ record, onBack }: { record: CompanyRecord; onBack: 
               <FileText className="w-3 h-3" />
               <span>数据来源: {record.source_name} / {record.source_sheet}</span>
             </div>
+            {record.source_platform && (
+              <div className="flex items-center gap-1.5">
+                <Building2 className="w-3 h-3" />
+                <span>来源平台: {record.source_platform}</span>
+              </div>
+            )}
+            {record.collected_at && (
+              <div className="flex items-center gap-1.5">
+                <Calendar className="w-3 h-3" />
+                <span>采集时间: {record.collected_at.slice(0, 10)}</span>
+              </div>
+            )}
             <div className="flex items-center gap-1.5">
               <ShieldCheck className="w-3 h-3" />
               <span>可信度评级: {CONFIDENCE_LABELS[record.confidence]}</span>
@@ -491,6 +578,7 @@ export function CityDetail() {
   const selectedCompanyCluster = useMapStore(s => s.selectedCompanyCluster);
   const filteredRecords = useMapStore(s => s.filteredRecords);
   const citySummaries = useMapStore(s => s.citySummaries);
+  const recordsLoaded = useMapStore(s => s.recordsLoaded);
   const selectCity = useMapStore(s => s.selectCity);
   const selectCompany = useMapStore(s => s.selectCompany);
   const selectCompanyCluster = useMapStore(s => s.selectCompanyCluster);
@@ -547,7 +635,7 @@ export function CityDetail() {
             transition={{ duration: 0.2 }}
             className="h-full"
           >
-            <CityListView city={citySummary} records={cityRecords} onBack={() => selectCity(null)} />
+            <CityListView city={citySummary} records={cityRecords} onBack={() => selectCity(null)} recordsLoaded={recordsLoaded} />
           </motion.div>
         ) : (
           <motion.div

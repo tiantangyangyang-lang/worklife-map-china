@@ -93,6 +93,18 @@ export interface CompanyRecord {
   rule_text: string;
   evidence_text: string;
   evidence_list: string[];
+  // 链接保留 (来自 Excel 单元格超链接): 公司官网 + 与 evidence_list 对齐的证据链接
+  company_url?: string;          // 公司官网 (公司单元格的超链接)
+  evidence_links?: string[];     // 证据链接, 与 evidence_list 同序对齐, 无链接处为 ''
+  // 招聘站 / 多来源扩展字段 (V4: 明细表格式可选列, 老数据为 undefined)
+  department?: string;           // 部门 (e.g. "研发中心")
+  job_title?: string;            // 岗位 / 职位 (e.g. "后端工程师")
+  work_begin?: string;           // 上班时间 (e.g. "09:00")
+  work_end?: string;             // 下班时间 (e.g. "21:00")
+  workdays?: string;             // 一周工作天数 (e.g. "5" / "6" / "大小周")
+  source_platform?: string;      // 来源平台 (e.g. "BOSS直聘" / "小红书" / "51job")
+  source_url?: string;           // 来源页 URL (招聘职位页 / 帖子链接, 可点击跳转)
+  collected_at?: string;         // 采集时间 (ISO 字符串)
   source_type: string;
   source_name: string;
   source_sheet: string;
