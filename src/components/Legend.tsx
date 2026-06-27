@@ -15,7 +15,7 @@ export function Legend() {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.3, duration: 0.3 }}
-      className="absolute top-4 left-4 z-20 bg-white/95 backdrop-blur-sm rounded-lg shadow-md border border-slate-200 p-3"
+      className="absolute left-4 bottom-4 sm:bottom-auto sm:top-4 z-20 bg-white/95 backdrop-blur-sm rounded-lg shadow-md border border-slate-200 p-3"
     >
       <div className="text-xs font-semibold text-slate-700 mb-2">工作强度等级图例</div>
       <div className="space-y-1">

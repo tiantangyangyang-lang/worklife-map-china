@@ -16,7 +16,7 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js';
  *
  * 如果环境变量未配置, 返回 null, API 会返回 503 提示未配置。
  */
-let _client: SupabaseClient | null | undefined = null;
+let _client: SupabaseClient | null | undefined = undefined;
 
 /** 读取 service_role key, 兼容三种环境变量名 (优先 SUPABASE_SECRET_KEY) */
 function getServiceRoleKey(): string | null {
