@@ -61,3 +61,6 @@ server.log
 # 因为框架部署管线依赖 .zscripts/dev.sh 启动, db/custom.db 是 build.sh 必需的占位文件)
 .env*
 
+
+.vercel
+.env*
