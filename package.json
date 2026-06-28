@@ -11,7 +11,9 @@
     "lint": "eslint .",
     "build:data": "tsx scripts/build-data.ts",
     "build:map": "tsx scripts/build-china-map.ts",
-    "db:push": "echo '[db:push] no-op: this project uses static Excel data, no Prisma database.'"
+    "db:push": "echo '[db:push] no-op: this project uses static Excel data, no Prisma database.'",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@deck.gl/core": "^9.3.4",
@@ -50,6 +52,7 @@
     "eslint-config-next": "^16.1.1",
     "tailwindcss": "^4",
     "tsx": "^4.19.0",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^2.1.9"
   }
 }
