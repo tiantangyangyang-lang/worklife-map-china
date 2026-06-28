@@ -3,7 +3,7 @@
 // ============================================================
 import { create } from 'zustand';
 import type { CompanyRecord, CitySummary, MapMode } from '@/lib/types';
-import { buildCitySummary, buildGlobalStats } from '@/lib/aggregate';
+import { buildCitySummary, buildGlobalStats, buildGlobalStatsFromCitySummary } from '@/lib/aggregate';
 import type { GlobalStats } from '@/lib/aggregate';
 import type { FilterState, WorkSystem, WeekendType, RiskLevel, Confidence } from '@/lib/types';
 
@@ -13,6 +13,8 @@ interface MapStore {
   filteredRecords: CompanyRecord[];
   citySummaries: CitySummary[];
   globalStats: GlobalStats | null;
+  /** P1 #4: 明细 records 是否已加载。摘要先行渲染时为 false, 明细后台到位后置 true。 */
+  recordsLoaded: boolean;
 
   // 加载状态
   loading: boolean;
@@ -41,6 +43,21 @@ interface MapStore {
   // Actions
   setRecords: (records: CompanyRecord[], source: string) => void;
   setMapMode: (mode: MapMode) => void;
+  /**
+   * P1 #4: 摘要先行加载 (只有 city_summary, 没有明细 records)。
+   * 用于首屏立即渲染城市聚合图 + 统计, 明细随后由 mergeRecords 补上。
+   */
+  loadSummaryFromApi: (
+    payload: {
+      version: number;
+      file_name: string;
+      city_summary: CitySummary[];
+      created_at?: string;
+    },
+    options?: { silent?: boolean }
+  ) => void;
+  /** P1 #4: 明细 records 后台到位后合并进 store, 解锁筛选/搜索/公司点位图。 */
+  mergeRecords: (records: CompanyRecord[], options?: { silent?: boolean }) => void;
   /**
    * 从 API 数据集响应加载数据 (公共数据模式)
    * @param payload /api/dataset/latest 返回的数据
@@ -114,6 +131,7 @@ export const useMapStore = create<MapStore>((set, get) => ({
   filteredRecords: [],
   citySummaries: [],
   globalStats: null,
+  recordsLoaded: false,
   loading: true,
   error: null,
   dataSource: '',
@@ -137,6 +155,7 @@ export const useMapStore = create<MapStore>((set, get) => ({
       filteredRecords: filtered,
       citySummaries: summaries,
       globalStats: stats,
+      recordsLoaded: true,
       loading: false,
       error: null,
       dataSource: source,
@@ -163,6 +182,7 @@ export const useMapStore = create<MapStore>((set, get) => ({
       filteredRecords: filtered,
       citySummaries: summaries,
       globalStats: stats,
+      recordsLoaded: true,
       loading: false,
       error: null,
       dataSource: payload.file_name,
@@ -171,6 +191,43 @@ export const useMapStore = create<MapStore>((set, get) => ({
       dataMode: 'api',
       // 静默更新 (轮询触发的) 不重置选中状态, 避免打断用户
       ...(silent ? {} : { selectedCity: null, selectedCompany: null }),
+    });
+  },
+
+  // P1 #4: 摘要先行 —— 只用 city_summary 渲染城市图 + 统计, 不含明细 records
+  loadSummaryFromApi: (payload, options) => {
+    const summaries = payload.city_summary ?? [];
+    const stats = buildGlobalStatsFromCitySummary(summaries);
+    const silent = options?.silent ?? false;
+    set({
+      allRecords: [],
+      filteredRecords: [],
+      citySummaries: summaries,
+      globalStats: stats,
+      recordsLoaded: false,
+      loading: false,
+      error: null,
+      dataSource: payload.file_name,
+      datasetVersion: payload.version,
+      datasetCreatedAt: payload.created_at ?? null,
+      dataMode: 'api',
+      ...(silent ? {} : { selectedCity: null, selectedCompany: null }),
+    });
+  },
+
+  // P1 #4: 明细 records 后台到位后合并; 此后 records 成为筛选/统计的来源
+  mergeRecords: (records) => {
+    const { filter } = get();
+    const filtered = applyFilter(records, filter);
+    // 有筛选时按筛选后的明细重算; 无筛选时也用明细重算 (与服务端 city_summary 一致)
+    const summaries = buildCitySummary(filtered);
+    const stats = buildGlobalStats(filtered);
+    set({
+      allRecords: records,
+      filteredRecords: filtered,
+      citySummaries: summaries,
+      globalStats: stats,
+      recordsLoaded: true,
     });
   },
 
@@ -186,8 +243,14 @@ export const useMapStore = create<MapStore>((set, get) => ({
   hoverCity: (city) => set({ hoveredCity: city }),
 
   setFilter: (partial) => {
-    const { allRecords, filter } = get();
+    const { allRecords, filter, recordsLoaded } = get();
     const newFilter = { ...filter, ...partial };
+    // P1 #4: 明细还没加载完时, 只暂存筛选条件, 不动摘要视图;
+    // 等 mergeRecords 到位后会自动按这个 filter 重算。
+    if (!recordsLoaded) {
+      set({ filter: newFilter });
+      return;
+    }
     const filtered = applyFilter(allRecords, newFilter);
     const summaries = buildCitySummary(filtered);
     const stats = buildGlobalStats(filtered);
@@ -202,7 +265,11 @@ export const useMapStore = create<MapStore>((set, get) => ({
   },
 
   resetFilter: () => {
-    const { allRecords } = get();
+    const { allRecords, recordsLoaded } = get();
+    if (!recordsLoaded) {
+      set({ filter: DEFAULT_FILTER });
+      return;
+    }
     const filtered = applyFilter(allRecords, DEFAULT_FILTER);
     const summaries = buildCitySummary(filtered);
     const stats = buildGlobalStats(filtered);
@@ -217,7 +284,8 @@ export const useMapStore = create<MapStore>((set, get) => ({
   },
 
   recompute: () => {
-    const { allRecords, filter } = get();
+    const { allRecords, filter, recordsLoaded } = get();
+    if (!recordsLoaded) return;
     const filtered = applyFilter(allRecords, filter);
     const summaries = buildCitySummary(filtered);
     const stats = buildGlobalStats(filtered);

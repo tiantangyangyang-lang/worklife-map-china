@@ -221,3 +221,41 @@ export function buildGlobalStats(records: CompanyRecord[]): GlobalStats {
     highRiskRatio: total > 0 ? Math.round((count_high_or_above / total) * 100) : 0,
   };
 }
+
+/**
+ * 仅从 city_summary 计算全局统计 (P1 #4: 摘要先行渲染, 此时还没有明细 records)。
+ * city_summary 里已带每个城市各等级计数, 汇总即可, 结果与 buildGlobalStats 一致。
+ */
+export function buildGlobalStatsFromCitySummary(summaries: CitySummary[]): GlobalStats {
+  let totalRecords = 0;
+  let count_955 = 0, count_965 = 0, count_996 = 0;
+  let count_low = 0, count_medium = 0, count_high = 0, count_very_high = 0, count_unknown = 0;
+
+  for (const s of summaries) {
+    totalRecords += s.total_records ?? s.total ?? 0;
+    count_955 += s.count_955 ?? 0;
+    count_965 += s.count_965 ?? 0;
+    count_996 += s.count_996 ?? 0;
+    count_low += s.low_count ?? s.count_low ?? 0;
+    count_medium += s.medium_count ?? s.count_medium ?? 0;
+    count_high += s.high_count ?? s.count_high_count ?? 0; // 仅 high (不含 very_high)
+    count_very_high += s.very_high_count ?? s.count_very_high ?? 0;
+    count_unknown += s.count_unknown ?? 0;
+  }
+
+  const count_high_or_above = count_high + count_very_high;
+
+  return {
+    totalRecords,
+    totalCities: summaries.length,
+    count_955,
+    count_965,
+    count_996,
+    count_high_or_above,
+    count_very_high,
+    count_low,
+    count_medium,
+    count_unknown,
+    highRiskRatio: totalRecords > 0 ? Math.round((count_high_or_above / totalRecords) * 100) : 0,
+  };
+}

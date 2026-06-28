@@ -213,11 +213,12 @@ export function ExportMenuItems({
 
 export function ExportButton() {
   const { loading, doExport, allRecords, filteredRecords } = useExportRecords();
+  const recordsLoaded = useMapStore(s => s.recordsLoaded);
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="sm" className="bg-white/80 backdrop-blur-sm" disabled={loading !== null}>
+        <Button variant="outline" size="sm" className="bg-white/80 backdrop-blur-sm" disabled={loading !== null || !recordsLoaded} title={!recordsLoaded ? '明细加载中, 稍候即可导出' : undefined}>
           {loading ? <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> : <Download className="w-3.5 h-3.5 mr-1.5" />}
           导出
         </Button>

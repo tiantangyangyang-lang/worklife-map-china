@@ -16,7 +16,7 @@ import { project, MAP_WIDTH, MAP_HEIGHT, type ChinaMapData, type ProvincePath } 
 import { RISK_COLORS } from '@/lib/types';
 import type { CompanyRecord, RiskLevel } from '@/lib/types';
 import { motion, AnimatePresence } from 'framer-motion';
-import { SearchX } from 'lucide-react';
+import { SearchX, Loader2 } from 'lucide-react';
 
 interface TooltipState {
   visible: boolean;
@@ -34,6 +34,7 @@ export function CompanyMapView() {
   const selectedCompanyCluster = useMapStore(s => s.selectedCompanyCluster);
   const selectCompany = useMapStore(s => s.selectCompany);
   const selectCompanyCluster = useMapStore(s => s.selectCompanyCluster);
+  const recordsLoaded = useMapStore(s => s.recordsLoaded);
 
   const [mapData, setMapData] = useState<ChinaMapData | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -144,6 +145,16 @@ export function CompanyMapView() {
       <div className="flex items-center justify-center h-full bg-amber-50 text-amber-800 text-sm p-4">
         地图省界数据加载失败: {loadError}
         <br />(请确认 /data/china-provinces.json 存在)
+      </div>
+    );
+  }
+
+  // P1 #4: 公司点位依赖明细 records, 摘要先行阶段还没到位 → 显示加载态
+  if (!recordsLoaded) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-sky-50 via-slate-50 to-emerald-50 text-slate-400">
+        <Loader2 className="w-7 h-7 animate-spin mb-2 text-emerald-500" />
+        <div className="text-sm">公司明细加载中…</div>
       </div>
     );
   }

@@ -38,7 +38,8 @@ interface LatestFull {
 export function useDatasetVersionPoller() {
   const dataMode = useMapStore(s => s.dataMode);
   const currentVersion = useMapStore(s => s.datasetVersion);
-  const loadDatasetFromApi = useMapStore(s => s.loadDatasetFromApi);
+  const loadSummaryFromApi = useMapStore(s => s.loadSummaryFromApi);
+  const mergeRecords = useMapStore(s => s.mergeRecords);
   const inFlightRef = useRef(false);
 
   useEffect(() => {
@@ -61,29 +62,37 @@ export function useDatasetVersionPoller() {
         const storeVersion = useMapStore.getState().datasetVersion;
         if (meta.version === storeVersion) return; // 没变化
 
-        // 3. version 变了, 拉完整数据
-        const fullRes = await fetch('/api/dataset/latest', { cache: 'no-store' });
-        if (!fullRes.ok) return;
-        const full: LatestFull = await fullRes.json();
-
+        // 3. version 变了, 先拉摘要 (P1 #4) 立即同步城市图 + 统计
+        const sumRes = await fetch('/api/dataset/latest?mode=summary', { cache: 'no-store' });
+        if (!sumRes.ok) return;
+        const sum: LatestFull = await sumRes.json();
         if (cancelled) return;
 
-        // 4. 更新 store (静默模式, 不重置选中状态)
-        loadDatasetFromApi(
+        // 4. 更新摘要 (静默模式, 不重置选中状态)
+        loadSummaryFromApi(
           {
-            version: full.version,
-            file_name: full.file_name,
-            records: full.records,
-            city_summary: full.city_summary,
-            created_at: full.created_at,
+            version: sum.version,
+            file_name: sum.file_name,
+            city_summary: sum.city_summary ?? [],
+            created_at: sum.created_at,
           },
           { silent: true },
         );
 
-        // 5. toast 提示
+        // 5. 后台拉明细 records 合并 (静默)
+        fetch('/api/dataset/records', { cache: 'no-store' })
+          .then(r => (r.ok ? r.json() : null))
+          .then(rec => {
+            if (!cancelled && rec && Array.isArray(rec.records)) {
+              mergeRecords(rec.records);
+            }
+          })
+          .catch(err => console.warn('[poller] records fetch failed:', err));
+
+        // 6. toast 提示
         toast.success('公共数据已更新, 地图已同步', {
           duration: 4000,
-          description: `版本 v${full.version} · ${full.record_count} 条记录 · ${full.city_count} 个城市`,
+          description: `版本 v${sum.version} · ${meta.record_count} 条记录 · ${meta.city_count} 个城市`,
         });
       } catch (e) {
         // 轮询失败静默忽略, 下次再试
@@ -107,7 +116,7 @@ export function useDatasetVersionPoller() {
       cancelled = true;
       if (timer) clearTimeout(timer);
     };
-  }, [dataMode, loadDatasetFromApi]);
+  }, [dataMode, loadSummaryFromApi, mergeRecords]);
 
   // 返回当前版本号, 方便调试
   return currentVersion;
