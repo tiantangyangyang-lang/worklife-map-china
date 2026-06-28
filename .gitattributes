@@ -1,0 +1,32 @@
+# ============================================================
+# 行尾规范: 文本文件统一以 LF 存入仓库, 消除 CRLF/LF 跨平台噪声。
+# Windows 检出仍按 core.autocrlf 转 CRLF (不强制 eol), 故不影响本地编辑体验。
+# ============================================================
+
+# 默认: 自动识别文本, 仓库内统一 LF
+* text=auto
+
+# Shell 脚本必须 LF (即便在 Windows 检出, 否则 bash 执行报错)
+*.sh text eol=lf
+
+# Windows 脚本保留 CRLF
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+
+# 二进制文件: 不做任何行尾转换
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.ico  binary
+*.webp binary
+*.woff  binary
+*.woff2 binary
+*.ttf  binary
+*.eot  binary
+*.xlsx binary
+*.xls  binary
+*.db   binary
+*.sqlite binary
+*.pdf  binary
