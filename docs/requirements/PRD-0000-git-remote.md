@@ -1,7 +1,7 @@
 ---
 id: PRD-0000
 title: 配置 GitHub remote 并启用 PR 流程
-status: ready
+status: done
 owner: TBD
 branch: chore/PRD-0000-git-remote
 created: 2026-06-27
