@@ -53,7 +53,8 @@ export default function Home() {
   const loading = useMapStore(s => s.loading);
   const error = useMapStore(s => s.error);
   const setRecords = useMapStore(s => s.setRecords);
-  const loadDatasetFromApi = useMapStore(s => s.loadDatasetFromApi);
+  const loadSummaryFromApi = useMapStore(s => s.loadSummaryFromApi);
+  const mergeRecords = useMapStore(s => s.mergeRecords);
   const setError = useMapStore(s => s.setError);
   const setLoading = useMapStore(s => s.setLoading);
   const dataSource = useMapStore(s => s.dataSource);
@@ -74,19 +75,28 @@ export default function Home() {
       try {
         setLoading(true);
 
-        // ===== 优先尝试 API: GET /api/dataset/latest =====
+        // ===== 优先尝试 API (P1 #4: 摘要先行, 明细后台补) =====
         try {
-          const apiRes = await fetch('/api/dataset/latest', { cache: 'no-store' });
-          if (apiRes.ok) {
-            const data = await apiRes.json();
-            if (!cancelled && data && Array.isArray(data.records) && data.records.length > 0) {
-              loadDatasetFromApi({
-                version: data.version,
-                file_name: data.file_name,
-                records: data.records,
-                city_summary: data.city_summary,
-                created_at: data.created_at,
+          const sumRes = await fetch('/api/dataset/latest?mode=summary', { cache: 'no-store' });
+          if (sumRes.ok) {
+            const sum = await sumRes.json();
+            if (!cancelled && sum && Array.isArray(sum.city_summary) && sum.city_summary.length > 0) {
+              // 1) 立即用摘要渲染城市图 + 统计 (首屏只下载 ~24KB 级别数据)
+              loadSummaryFromApi({
+                version: sum.version,
+                file_name: sum.file_name,
+                city_summary: sum.city_summary,
+                created_at: sum.created_at,
               });
+              // 2) 后台拉明细 records, 解锁筛选 / 搜索 / 公司点位图 / 2.5D
+              fetch('/api/dataset/records', { cache: 'no-store' })
+                .then(r => (r.ok ? r.json() : null))
+                .then(rec => {
+                  if (!cancelled && rec && Array.isArray(rec.records)) {
+                    mergeRecords(rec.records);
+                  }
+                })
+                .catch(err => console.warn('[loadData] records fetch failed:', err));
               return;
             }
           }
@@ -121,7 +131,7 @@ export default function Home() {
     }
     loadData();
     return () => { cancelled = true; };
-  }, [setRecords, loadDatasetFromApi, setError, setLoading]);
+  }, [setRecords, loadSummaryFromApi, mergeRecords, setError, setLoading]);
 
   // 加载提示 (避免布局闪烁, 在两种布局下都显示)
   if (loading && !error) {
