@@ -375,37 +375,38 @@ function CompanyDetailView({ record, onBack }: { record: CompanyRecord; onBack: 
   );
 }
 
-/** 分类依据模块 (issue #8) */
-function ClassificationBasisView({ basis }: { basis: ClassificationBasis }) {
-  const sourceLabel: Record<string, string> = {
-    keyword: '关键词命中',
-    section_fallback: '区域兜底',
-    section_default: '区域默认',
-    work_system_inferred: '由工作制度推断',
-    severe_keyword: '违规关键词',
-    work_system_mapping: '制度默认映射',
-    unknown: '未知来源',
-  };
+/** 分类依据来源标签映射 (模块级常量, 避免每次渲染重建) */
+const BASIS_SOURCE_LABEL: Record<string, string> = {
+  keyword: '关键词命中',
+  section_fallback: '区域兜底',
+  section_default: '区域默认',
+  work_system_inferred: '由工作制度推断',
+  severe_keyword: '违规关键词',
+  work_system_mapping: '制度默认映射',
+  unknown: '未知来源',
+};
 
-  const Row = ({
-    title,
-    value,
-    reasons,
-    source,
-    color,
-  }: {
-    title: string;
-    value: string;
-    reasons: string[];
-    source: string;
-    color?: string;
-  }) => (
+/** 分类依据单行 (模块级组件, 不在 render 内创建以保持状态稳定) */
+function BasisRow({
+  title,
+  value,
+  reasons,
+  source,
+  color,
+}: {
+  title: string;
+  value: string;
+  reasons: string[];
+  source: string;
+  color?: string;
+}) {
+  return (
     <div className="bg-white rounded-md border border-slate-200 p-2.5">
       <div className="flex items-center justify-between mb-1.5">
         <div className="flex items-center gap-1.5">
           <span className="text-xs font-semibold text-slate-700">{title}</span>
           <Badge variant="outline" className="text-[10px] h-4 px-1.5 font-normal text-slate-500">
-            {sourceLabel[source] || source}
+            {BASIS_SOURCE_LABEL[source] || source}
           </Badge>
         </div>
         <span
@@ -425,7 +426,10 @@ function ClassificationBasisView({ basis }: { basis: ClassificationBasis }) {
       </ul>
     </div>
   );
+}
 
+/** 分类依据模块 (issue #8) */
+function ClassificationBasisView({ basis }: { basis: ClassificationBasis }) {
   return (
     <div>
       <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-700 mb-1.5">
@@ -434,19 +438,19 @@ function ClassificationBasisView({ basis }: { basis: ClassificationBasis }) {
         <span className="text-[10px] text-slate-400 font-normal">(系统自动判定, 仅供参考)</span>
       </div>
       <div className="space-y-1.5">
-        <Row
+        <BasisRow
           title="工作制度"
           value={WORK_SYSTEM_LABELS[basis.workSystem.label] || basis.workSystem.label}
           reasons={basis.workSystem.reasons}
           source={basis.workSystem.source}
         />
-        <Row
+        <BasisRow
           title="周末类型"
           value={basis.weekendType.label}
           reasons={basis.weekendType.reasons}
           source={basis.weekendType.source}
         />
-        <Row
+        <BasisRow
           title="强度等级"
           value={RISK_COLORS[basis.riskLevel.label].label}
           reasons={basis.riskLevel.reasons}

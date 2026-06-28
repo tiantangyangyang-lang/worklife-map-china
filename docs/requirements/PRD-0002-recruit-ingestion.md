@@ -1,7 +1,7 @@
 ---
 id: PRD-0002
 title: 招聘站数据入库程序 (DeepSeek 提取作息信号)
-status: ready
+status: done
 owner: TBD
 branch: feat/PRD-0002-recruit-ingestion
 created: 2026-06-27
