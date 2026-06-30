@@ -1,7 +1,7 @@
 ---
 id: PRD-0001
 title: 产品挂钩 — 公司 ↔ 品牌/产品 (双休购式)
-status: draft
+status: done
 owner: TBD
 branch: feat/PRD-0001-product-linkage
 created: 2026-06-27

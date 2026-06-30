@@ -8,7 +8,7 @@
 | — | 阶段1: 保留 Excel 链接 (公司官网 / 证据链接可点击) | ✅ | — | 已上线 (commit 4e68414) |
 | — | 阶段2: 扩展招聘站字段 (部门/岗位/上下班/来源链接等) + 模板 | ✅ | — | 已上线 (commit 4e68414) |
 | PRD-0000 | 配置 GitHub remote, 启用真正的 PR 流程 | ✅ | [PRD-0000](PRD-0000-git-remote.md) | private 仓库已建并推送 main |
-| PRD-0001 | 产品挂钩 (公司 ↔ 品牌/产品, 双休购式) | 📋 | [PRD-0001](PRD-0001-product-linkage.md) | 参考 dx-sxgo |
+| PRD-0001 | 产品挂钩 (公司 ↔ 品牌/产品, 双休购式) | ✅ | [PRD-0001](PRD-0001-product-linkage.md) | 明细表"品牌/产品"列 + 详情页展示 |
 | PRD-0002 | 招聘站数据入库程序 (DeepSeek 提取作息, 证据=职位页URL) | ✅ | [PRD-0002](PRD-0002-recruit-ingestion.md) | 已实现 (scripts/ingest-recruit.ts + src/lib/deepseek.ts) |
 
 ## 优先级建议

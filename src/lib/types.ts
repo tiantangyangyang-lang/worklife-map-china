@@ -65,6 +65,13 @@ export interface ClassificationBasis {
   };
 }
 
+/** 公司旗下品牌 / 产品 (PRD-0001 产品挂钩) */
+export interface Brand {
+  name: string;       // 品牌 / 产品名 (e.g. "某App")
+  category?: string;  // 分类 (e.g. "电商" / "游戏"), 可选
+  url?: string;       // 产品官网 / 落地页, 可选 (已 sanitize, 仅 http/https)
+}
+
 /** 标准化后的公司记录 */
 export interface CompanyRecord {
   id: string;
@@ -105,6 +112,8 @@ export interface CompanyRecord {
   source_platform?: string;      // 来源平台 (e.g. "BOSS直聘" / "小红书" / "51job")
   source_url?: string;           // 来源页 URL (招聘职位页 / 帖子链接, 可点击跳转)
   collected_at?: string;         // 采集时间 (ISO 字符串)
+  // 产品挂钩 (PRD-0001: 公司旗下品牌/产品, 老数据为 undefined)
+  brands?: Brand[];
   source_type: string;
   source_name: string;
   source_sheet: string;

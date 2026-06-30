@@ -435,6 +435,8 @@ function buildHeaderMap(header: any[]): Record<string, number> {
       source_platform: ['来源平台', '平台', 'source_platform', 'platform'],
       source_url: ['来源链接', '来源url', '源链接', 'source_url', 'sourceurl', '链接'],
       collected_at: ['采集时间', '收集时间', 'collected_at', 'collectedat', 'collect_time'],
+      // PRD-0001: 产品挂钩 (公司旗下品牌/产品, 多个用 | 分隔)
+      brands: ['品牌', '产品', '品牌/产品', '旗下品牌', 'brands', 'brand', 'products', 'product'],
     };
     for (const [key, aliasList] of Object.entries(aliases)) {
       if (aliasList.includes(name) && !(key in map)) {
@@ -501,6 +503,15 @@ function parseDetailTable(
     const workdays = get('workdays');
     const sourcePlatform = get('source_platform');
     const collectedAt = get('collected_at');
+    // PRD-0001: 品牌/产品 (| 分隔; 单元格超链接作为首个品牌的 url)
+    const brandsRaw = get('brands');
+    const brandsCellUrl = sanitizeUrl(links?.[i]?.[headerMap['brands']]);
+    const brands = brandsRaw
+      ? brandsRaw.split(/[|｜;；]/).map(s => s.trim()).filter(Boolean).map((name, bi) => ({
+          name,
+          url: bi === 0 && brandsCellUrl ? brandsCellUrl : undefined,
+        }))
+      : [];
 
     // 经纬度校验
     const hasValidCoord = lng !== null && lat !== null && isValidChinaCoordinate(lng, lat);
@@ -590,6 +601,7 @@ function parseDetailTable(
       source_platform: sourcePlatform || undefined,
       source_url: sourceUrl || undefined,
       collected_at: collectedAt || undefined,
+      brands: brands.length ? brands : undefined,
       source_type: 'uploaded_excel',
       source_name: sourceName,
       source_sheet: sheetName,
