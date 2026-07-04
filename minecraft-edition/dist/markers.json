@@ -1,0 +1,22 @@
+[
+  {
+    "id": "example-001",
+    "company_name": "示例科技有限公司",
+    "city": "深圳",
+    "district": "南山区",
+    "address": "深南大道1000号",
+    "lng": 113.9235,
+    "lat": 22.5434,
+    "coord_system": "WGS84",
+    "geo_level": "coordinate",
+    "work_system": "5天工作制",
+    "weekend_type": "双休",
+    "intensity_level": "low",
+    "evidence_text": "示例数据",
+    "source_type": "example",
+    "confidence": 1,
+    "updated_at": "2026-07-03T00:00:00Z",
+    "mcX": 117,
+    "mcZ": 566
+  }
+]

@@ -1,0 +1,2 @@
+npc create 117 64 566 --name "示例科技有限公司前台"
+npc command add 117 64 566 /worklife company example-001

@@ -1,0 +1,10 @@
+{
+  "min_lng": 113.9,
+  "max_lng": 114.1,
+  "min_lat": 22.5,
+  "max_lat": 22.6,
+  "world_width": 1000,
+  "world_depth": 1000,
+  "offsetX": 0,
+  "offsetZ": 0
+}

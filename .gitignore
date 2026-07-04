@@ -64,3 +64,18 @@ server.log
 
 .vercel
 .env*
+
+# Agent/runtime artifacts
+logs/
+.agent/
+.agent-done
+.next-start.pid
+.npmrc
+
+# Temporary agent task files
+TASK_*.md
+AGENT_TASK.md
+AGENT_FINALIZE_TASK.md
+BLOCKED.md
+continue_after_node.sh
+run_codex_once.sh
