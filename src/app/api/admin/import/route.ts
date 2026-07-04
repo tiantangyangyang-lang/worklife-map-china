@@ -16,6 +16,7 @@ import type {
   CoordSystem,
   GeoSource,
   Confidence,
+  Brand,
 } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
@@ -384,6 +385,17 @@ function sanitizeAndReclassify(raw: unknown, index: number): CompanyRecord | nul
     source_platform: str(r.source_platform, 50) || undefined,
     source_url: sanitizeUrl(r.source_url) || undefined,
     collected_at: str(r.collected_at, 32) || undefined,
+    // PRD-0001: 品牌/产品 (零信任: 重新裁剪字段, url 只放行 http/https)
+    brands: (() => {
+      if (!Array.isArray(r.brands)) return undefined;
+      const out = r.brands.slice(0, MAX_LIST).map((b): Brand | null => {
+        const bb = b && typeof b === 'object' ? (b as Record<string, unknown>) : {};
+        const name = str(bb.name, 200);
+        if (!name) return null;
+        return { name, category: str(bb.category, 100) || undefined, url: sanitizeUrl(bb.url) || undefined };
+      }).filter((x): x is Brand => x !== null);
+      return out.length ? out : undefined;
+    })(),
     source_type: str(r.source_type, 50),
     source_name: str(r.source_name, MAX_STR),
     source_sheet: str(r.source_sheet, 100),
