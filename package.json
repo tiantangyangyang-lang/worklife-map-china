@@ -13,6 +13,8 @@
     "build:map": "tsx scripts/build-china-map.ts",
     "db:push": "echo '[db:push] no-op: this project uses static Excel data, no Prisma database.'",
     "test": "vitest run",
+    "import:job": "tsx scripts/import-job-postings.ts",
+    "extract:signals": "tsx scripts/extract-worklife-signals.ts",
     "test:watch": "vitest"
   },
   "dependencies": {

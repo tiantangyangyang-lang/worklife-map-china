@@ -96,6 +96,18 @@ bun run dev
 
 打开浏览器访问 `http://localhost:3000`, 系统会自动加载预置示例数据。
 
+### 新增 API 接口
+
+- **GET `/api/companies`**: 支持以下查询参数进行服务器端过滤与分页（默认 `limit=50`、`page=1`）
+  - `city`、`district`、`work_system`、`weekend_type`、`intensity_level`（对应 `risk_level`）
+  - `q`：在公司名、城市、区县、规则文本、证据文本中模糊搜索
+  - `limit`、`page`：分页控制
+  - 返回形如 `{ total, page, limit, records[] }`，字段与 `/api/dataset/records` 相同。
+
+```bash
+curl "http://localhost:3000/api/companies?city=北京\u0026limit=10\u0026page=1"
+```
+
 ### 生产构建
 
 ```bash
